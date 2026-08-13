@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectStatus{
+  COMPLETED
+  ABANDONED 
+  ACTIVE
+  PAUSED
+}
+enum Difficulty{
+  EASY
+  MEDIUM 
+  HARD
+  ADAPTIVE
+}
+
+enum ExperienceLevel {
+  BEGINNER        // Requires active mentorship/supervision (Freshers)
+  INTERMEDIATE    // Operates independently on routine tasks
+  ADVANCED        // Leads complex projects / mentors others
+  EXPERT          // Defines architecture / sets technical vision
+}
+
+enum HelpPreference{
+  HINT_FIRST
+  PSEUDOCODE_FIRST
+  SOLUTION_LAST
+  ADAPTIVE
+}
+
+enum LearningStyle{
+  VISUAL
+  HANDS_ON
+  THEORY
+  MIXED 
+}
+
+model User{
+  id String @id @default(uuid())
+  name String
+  email String @unique
+  passwordHash String
+  profile LearnerProfile?
+  projects Project[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+model LearnerProfile{
+  id String @id @default(uuid())
+  goal String
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetTimeFrame DateTime
+  experienceLevel ExperienceLevel @default(BEGINNER)
+  difficulty Difficulty @default(ADAPTIVE)
+  helpPreference HelpPreference @default(ADAPTIVE)
+  learningStyle LearningStyle @default(MIXED)
+  availableHoursPerDay Int @default(2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenges Challenge[]
+  title String
+  description String?
+  status ProjectStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Challenge{
+  id String @id @default(uuid())
+  projectId String
+  project Project @relation(fields: [projectId], references:[id], onDelete: Cascade)
+  title String
+  description String
+  difficulty Difficulty @default(MEDIUM)
+  learningObjectives String[]
+  challengeOrder Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([projectId, challengeOrder])
+}

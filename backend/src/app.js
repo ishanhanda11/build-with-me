@@ -1,0 +1,44 @@
+const express = require('express')
+
+const app = express()
+app.use((req,res,next)=>{
+    const userIp = req.ip
+    const method = req.method
+    const url = req.originalUrl
+    const timestamp = new Date()
+    console.log(`The user with ip ${userIp} made ${method} request on url: ${url}, at ${timestamp.toISOString()}`)
+    next()
+})
+
+app.get('/health',(req,res)=>{
+    res.status(200).json({status: 'ok'})
+})
+
+app.get('/api',(req,res)=>{
+    res.status(200).json({message: "build with me api"})
+})
+app.get('/test-error',(req,res,next)=>{
+    const error = new Error('something went wrong with the server');
+    error.statusCode = 500;
+    return next(error)
+})
+app.use((req,res,next)=>{
+    res.status(404).json({
+        status: 404,
+        error: 'not found',
+        message: `cannot ${req.method} ${req.originalUrl}`
+    })
+})
+
+app.use((err,req,res,next)=>{
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal Server Error';
+    res.status(statusCode).json({
+        status: statusCode,
+        error: message,
+        message: 'something went wrong'
+    })
+})
+
+
+module.exports = app
