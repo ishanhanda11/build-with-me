@@ -78,7 +78,23 @@ This project is being built to:
 
 ## Current Status
 
-🚧 Project setup and architecture phase.
+✅ Backend foundation is now in progress beyond the initial architecture phase.
+
+The project has moved from a basic skeleton into a working backend structure with:
+
+* Express API setup with middleware, routes, 404s, and centralized error handling
+* PostgreSQL + Prisma database foundation with user, learner profile, project, challenge, and refresh token models
+* User authentication flow with registration, login, refresh token rotation, and logout
+* Protected profile creation route using JWT access-token validation
+* Request validation with Zod for auth and learner profile inputs
+* Cookie-based session handling for access and refresh tokens
+
+## What is next
+
+* Build the project and challenge generation flow
+* Add AI prompt and evaluation service integration
+* Expand the app from auth/profile setup into adaptive learning workflows
+* Add real tests, environment configuration, and deployment preparation
 
 ## Documentation
 

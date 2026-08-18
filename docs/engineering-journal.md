@@ -634,3 +634,445 @@ Completed so far:
 Current next step:
 
 **Add real backend feature structure: controllers, routes, services, repositories, validation, and the first learner/user API flow.**
+
+---
+
+# Day 4 - Authentication Foundation Started
+
+## Where I left off
+
+The previous step ended with the backend foundation in place:
+
+* Express app and server split.
+* Basic routes and middleware added.
+* Centralized error handling added.
+* Prisma configured.
+* Initial schema and migration created.
+* Shared Prisma client module added.
+
+The planned next step was to start moving from a basic backend skeleton into real backend feature structure:
+
+```text
+controllers
+routes
+services
+repositories
+validation
+first learner/user API flow
+```
+
+The additional changes made after that point started the authentication foundation.
+
+## What changed
+
+The backend now has additional authentication-related dependencies:
+
+* `bcrypt`
+* `jsonwebtoken`
+* `zod`
+
+The backend also has `nodemon` added as a development dependency.
+
+These changes were recorded in:
+
+* `backend/package.json`
+* `backend/package-lock.json`
+
+## Why these dependencies matter
+
+`bcrypt` is needed so user passwords can be hashed before being stored.
+
+This matches the earlier schema decision to store `passwordHash` instead of a raw password.
+
+`jsonwebtoken` is needed for issuing signed tokens after login.
+
+This will likely support short-lived access tokens that the frontend can send with protected API requests.
+
+`zod` is needed for request validation.
+
+This is important because controllers should not trust raw request bodies. Incoming data should be checked before the app tries to create users, hash passwords, issue tokens, or save data.
+
+`nodemon` was added to support a smoother development workflow, although the current `dev` script still uses Node's watch mode.
+
+## Refresh token model added
+
+The Prisma schema now includes a new `RefreshToken` model.
+
+The `User` model now has:
+
+```prisma
+refreshTokens RefreshToken[]
+```
+
+The new model stores:
+
+* `id`
+* `userId`
+* relation to `User`
+* `tokenHash`
+* `revokedAt`
+* `expiresAt`
+* timestamps
+
+This means the database can remember refresh tokens instead of treating authentication as only a stateless JWT problem.
+
+That matters because refresh tokens often need server-side control:
+
+* A token can expire.
+* A token can be revoked on logout.
+* A token can be deleted if the user account is deleted.
+* The raw refresh token does not need to be stored if only its hash is saved.
+
+The relation uses cascade delete, so a user's refresh tokens are deleted when the user is deleted.
+
+## Validation folder started
+
+A new validator file was added:
+
+* `backend/src/validators/auth.validation.js`
+
+It currently defines a `registerValidation` schema with:
+
+```js
+const registerValidation = z.object({
+    name: z.string().min(3).max(50),
+    email: z.string().email(),
+    password: z.string().min(8)
+})
+```
+
+This is the beginning of input validation for the registration flow.
+
+The registration route is not wired yet, but the schema shows the intended boundary:
+
+```text
+request body
+    |
+Zod validation
+    |
+controller/service logic
+    |
+database write
+```
+
+## Important issue noticed
+
+The validator currently defines `registerValidation`, but it does not export it yet.
+
+That means other files cannot import and use it until an export is added.
+
+The auth feature is started, but not complete.
+
+## Backend lessons learned
+
+### Authentication needs both hashing and token strategy
+
+Password hashing and JWTs solve different problems.
+
+Hashing protects stored passwords.
+
+JWTs help prove that a request came from an authenticated user.
+
+Refresh tokens add a server-controlled way to continue sessions without forcing the user to log in constantly.
+
+### Validation belongs near the boundary
+
+Request validation should happen before business logic.
+
+That keeps controllers and services from dealing with invalid or incomplete data.
+
+For registration, this means checking fields like name, email, and password before trying to create a user.
+
+### Refresh tokens should not be stored raw
+
+The schema uses `tokenHash`, which is a better direction than storing a raw refresh token.
+
+If the database is exposed, raw refresh tokens would let an attacker continue sessions.
+
+Storing a hash reduces that risk because the backend can compare hashes without keeping the original token value.
+
+---
+
+# Mistakes / Problems After Auth Start
+
+* The authentication dependency setup has started, but no auth routes, controllers, services, or repositories are wired yet.
+* `registerValidation` exists but is not exported yet.
+* The `RefreshToken` model was added to the Prisma schema, but a matching migration has not been created yet.
+* `bcrypt`, `jsonwebtoken`, and `zod` are installed but not used by application code yet.
+* `nodemon` was added, but the `dev` script still uses `node --watch`.
+* The app still does not parse JSON request bodies with `express.json()`, which will block real registration/login request bodies until added.
+* There are still no real automated tests.
+
+---
+
+# Decisions Added After Auth Start
+
+### Decision 011 - Use Zod for request validation
+
+Zod will be used to validate incoming request bodies before controller or service logic runs.
+
+This keeps invalid data from spreading deeper into the application.
+
+### Decision 012 - Store refresh tokens in the database
+
+Refresh tokens should be persisted so sessions can be revoked, expired, and managed server-side.
+
+This gives the backend more control than relying only on stateless access tokens.
+
+---
+
+# Day 5 - Authentication and Profile API Flow
+
+## Where we were before
+
+At the end of the previous journal section, the backend had already moved past the initial setup:
+
+* Express app/server split was in place.
+* Prisma and PostgreSQL were configured.
+* The initial schema and migration existed.
+* A `RefreshToken` model had been planned and started.
+* Validation and auth dependencies were being introduced.
+
+The key gap was that the app still did not have a real user-authenticated flow. The backend was still structurally ready, but the actual registration, login, token handling, and learner-profile creation logic had not been completed.
+
+## What changed in this current phase
+
+The backend moved from a learning skeleton into a real first feature flow.
+
+### Authentication flow implemented
+
+A full auth foundation is now in place across multiple files:
+
+* `backend/src/routes/auth.routes.js`
+* `backend/src/controllers/auth.controller.js`
+* `backend/src/services/auth.service.js`
+* `backend/src/repositories/auth.repository.js`
+* `backend/src/services/token.service.js`
+* `backend/src/middleware/authentication.middleware.js`
+
+This includes:
+
+* `POST /api/auth/register`
+* `POST /api/auth/login`
+* `POST /api/auth/refresh`
+* `POST /api/auth/logout`
+
+The flow includes:
+
+* password hashing with `bcrypt`
+* access token generation with `jsonwebtoken`
+* refresh token generation and hashing
+* refresh-token rotation on session renewal
+* revocation on logout
+* secure cookie-based token storage
+
+### Learner profile flow implemented
+
+The backend now also includes a protected profile creation path:
+
+* `backend/src/routes/profile.routes.js`
+* `backend/src/controllers/profile.controller.js`
+* `backend/src/services/profile.service.js`
+* `backend/src/repositories/profile.repository.js`
+
+The profile route is protected by `authenticate`, which verifies the access token from the cookie before allowing a user to create a profile.
+
+This gives the app a first real authenticated data-write flow rather than only unsecured public routes.
+
+### Validation added
+
+The backend now validates incoming request bodies with Zod:
+
+* `backend/src/validators/auth.validation.js`
+* `backend/src/validators/profile.validation.js`
+
+This ensures invalid registration and profile payloads are rejected before they reach business logic.
+
+### Database and app wiring updated
+
+The main app file now includes:
+
+* `express.json()` for parsing JSON bodies
+* `cookie-parser` to read and write authentication cookies
+* route registration for `/api/auth` and `/api/profile`
+* centralized error handling and 404 responses
+
+The Prisma client setup also reflects the actual database work by using a PostgreSQL connection pool and Prisma adapter.
+
+## Why this matters
+
+This was the phase where the application started acting like a real backend instead of a placeholder project.
+
+The most important product-level lesson is that the app did not just need routes; it needed a dependable identity and session model.
+
+The backend now captures the first important lifecycle:
+
+```text
+User signs up or logs in
+    ↓
+Password is hashed
+    ↓
+Access token + refresh token are issued
+    ↓
+Protected routes validate the access token
+    ↓
+User profile can be created against the authenticated identity
+```
+
+This is the foundation for later features like:
+
+* onboarding flow
+* challenge generation
+* learner attempts
+* AI evaluation
+* adaptive hints
+* persistence of learning state
+
+## Lessons learned
+
+### Cookies are an important part of a web app session flow
+
+The app is not only issuing tokens; it is also sending them through cookies with `httpOnly` and `sameSite` settings.
+
+This is important because it reduces the risk of token leakage through browser-side JavaScript and creates a cleaner user session flow for a web API.
+
+### Refresh-token rotation is better than a single long-lived refresh token
+
+The current implementation rotates refresh tokens when a new session is created.
+
+This makes token reuse harder and gives the backend more control over invalidation.
+
+### Protected routes should be auth-aware from the start
+
+A profile API is not useful if it accepts requests from any anonymous user.
+
+By validating the JWT in the middleware before reaching the controller, the application begins to enforce clear ownership boundaries:
+
+* a user can only work with their own profile data
+* future project/challenge flows can derive from the authenticated `userId`
+
+### Validation should happen at the API boundary
+
+The backend is now enforcing a cleaner layering discipline:
+
+```text
+request
+    ↓
+Zod validation
+    ↓
+controller
+    ↓
+service
+    ↓
+repository
+    ↓
+Prisma/DB
+```
+
+This is a better pattern than allowing unvalidated data to reach the database and business logic.
+
+## Mistakes / Problems from this phase
+
+* The project still has no automated test suite.
+* Environment variables such as JWT secrets and database connection details must be managed carefully.
+* The app still needs stronger handling for edge cases such as expired refresh tokens, invalid cookies, and missing headers.
+* The auth flow is functional but still early-stage and will need security reviews as the project grows.
+* The current frontend is not yet connected to this backend in a full end-to-end flow.
+
+## Decisions added after this phase
+
+### Decision 013 - Use cookie-based JWT transport for the web API
+
+Access and refresh tokens are stored in cookies so the browser can send them automatically for protected APIs.
+
+This suits an app where the backend is the API layer and the frontend is a separate client.
+
+### Decision 014 - Use refresh-token rotation
+
+When the user refreshes a session, the backend revokes the old refresh token and issues a new one.
+
+This improves security and makes the session lifecycle easier to reason about.
+
+### Decision 015 - Protect the learner-profile creation flow with authentication
+
+The profile is not public. It belongs to the authenticated user.
+
+This supports the product principle that user identity and learning state should be owned by the learner and not created anonymously.
+
+## Interview questions added
+
+* Why are access tokens and refresh tokens different?
+* Why should refresh tokens be hashed before saving?
+* Why rotate refresh tokens after each session renewal?
+* Why is `cookie-parser` needed when using cookies in Express?
+* Why should a protected route verify a JWT before it reaches controller logic?
+* Why does a profile API need the authenticated user ID?
+* Why use `Zod` at request boundaries?
+* Why is `httpOnly` useful for tokens stored in cookies?
+* What is the difference between authentication and authorization?
+* Why should the backend hold the secrets rather than the frontend?
+
+## Current status updated
+
+The current backend now includes the core authentication and learner-profile foundation.
+
+Completed so far:
+
+* Node.js backend package created
+* Express server and app split implemented
+* Health and API routes added
+* Request logging and centralized error handling added
+* Prisma configured for PostgreSQL
+* Initial database models created and refined
+* Refresh token table and session model added
+* Auth routes, controllers, services, and repositories built
+* JWT access-token and refresh-token flow implemented
+* Cookie-based login/logout/refresh session handling added
+* Protected profile creation route added
+* Zod validation added for auth and profile requests
+
+Current next step:
+
+**Move from identity and profile setup into project generation, challenge creation, and AI-powered adaptive learning workflows.**
+
+### Decision 013 - Store refresh token hashes, not raw tokens
+
+Refresh tokens should be treated like sensitive credentials.
+
+The database should store a token hash so leaked database rows do not directly expose usable refresh tokens.
+
+---
+
+# Interview Questions Added After Auth Start
+
+* Why should passwords be hashed before storing them?
+* Why use `bcrypt` instead of writing a custom hashing function?
+* What is the difference between an access token and a refresh token?
+* Why might refresh tokens be stored in the database?
+* Why store a refresh token hash instead of the raw token?
+* What does token revocation mean?
+* Why validate request bodies before controller logic?
+* What problem does Zod solve?
+* Why should validation schemas be exported from their modules?
+* What needs to happen after changing a Prisma schema?
+
+---
+
+# Current Status After Auth Start
+
+Authentication foundation has started.
+
+Completed since the last journal entry:
+
+* Added auth-related dependencies.
+* Added `zod` for validation.
+* Added `bcrypt` for future password hashing.
+* Added `jsonwebtoken` for future token issuing.
+* Added `nodemon` as a development dependency.
+* Added a `RefreshToken` Prisma model.
+* Connected refresh tokens to the `User` model.
+* Started a registration validation schema.
+
+Current next step:
+
+**Finish the first auth flow by adding JSON body parsing, exporting validation schemas, creating auth routes/controllers/services, hashing passwords, saving users, generating tokens, and creating the matching Prisma migration.**

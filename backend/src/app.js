@@ -1,6 +1,10 @@
 const express = require('express')
-
+const authRoutes = require('./routes/auth.routes')
+const profileRoutes = require('./routes/profile.routes')
 const app = express()
+const cookieParser = require('cookie-parser')
+app.use(express.json());
+app.use(cookieParser())
 app.use((req,res,next)=>{
     const userIp = req.ip
     const method = req.method
@@ -22,6 +26,8 @@ app.get('/test-error',(req,res,next)=>{
     error.statusCode = 500;
     return next(error)
 })
+app.use('/api/auth',authRoutes)
+app.use('/api/profile',profileRoutes)
 app.use((req,res,next)=>{
     res.status(404).json({
         status: 404,
@@ -29,6 +35,8 @@ app.use((req,res,next)=>{
         message: `cannot ${req.method} ${req.originalUrl}`
     })
 })
+
+
 
 app.use((err,req,res,next)=>{
     const statusCode = err.statusCode || 500;
