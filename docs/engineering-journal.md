@@ -1076,3 +1076,47 @@ Completed since the last journal entry:
 Current next step:
 
 **Finish the first auth flow by adding JSON body parsing, exporting validation schemas, creating auth routes/controllers/services, hashing passwords, saving users, generating tokens, and creating the matching Prisma migration.**
+
+---
+
+# Day 6 - Profile Continuation & Project Generation API
+
+## Where we were before
+
+Authentication and the initial profile creation route were in place. The next goal was to introduce AI-powered project generation and allow fetching/updating the profile.
+
+## What changed in this phase
+
+### Profile feature expanded
+- Added `getProfile` and `updateProfile` in `backend/src/services/profile.service.js`.
+- Exposed `GET /api/profile` and `PATCH /api/profile` via `profile.routes.js`.
+- Implemented `updateProfileValidation` using `zod` to validate profile modifications.
+- Allowed users to securely read and update their own learner profile data.
+
+### AI Project Generation introduced
+- Integrated `@google/genai` (Gemini SDK) into the application.
+- Added `ai.service.js` which sends the user's profile to Gemini to generate a personalized learning project containing structured challenges.
+- Implemented `generatedProjectValidation` using `zod` to validate the JSON returned by the AI before accepting it.
+
+### Project endpoints and database wiring
+- Created `project.service.js` to manage the project creation workflow, using Prisma transactions to atomically save the `Project` and its `Challenge` records.
+- Created `project.repository.js` to handle database interactions for projects and challenges.
+- Added `POST /api/project` route, protected by authentication, to trigger the generation and save it to the database.
+
+## Lessons learned
+
+### AI Integration needs strict schemas
+By providing `responseSchema` and validating the output with Zod, the application protects itself from unexpected AI responses. We do not trust the AI output blindly; we validate it just like any user input.
+
+### Transactions for related data
+The Project and its Challenges must be saved together. Using `prisma.$transaction` ensures that if one challenge fails to save, the entire project creation rolls back, preventing incomplete data.
+
+## Mistakes / Problems from this phase
+- The `.env` file now needs a valid `GEMINI_API_KEY`, but there's no error handling yet if the key is missing on startup.
+- The project generation can take several seconds; the frontend will need to handle this delay gracefully.
+
+## Current status updated
+The application can now successfully take an authenticated learner's profile and use it to ask Gemini for a personalized learning project, safely parse the result, and persist it to PostgreSQL.
+
+Current next step:
+**Begin integrating the frontend to connect with these backend APIs and build out the UI for profile management and project viewing.**
