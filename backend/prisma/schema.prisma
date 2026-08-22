@@ -9,6 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url = env("DATABASE_URL")
 }
 
 enum ProjectStatus{
@@ -44,7 +45,11 @@ enum LearningStyle{
   THEORY
   MIXED 
 }
-
+enum AttemptStatus{
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
 model User{
   id String @id @default(uuid())
   name String
@@ -53,6 +58,7 @@ model User{
   profile LearnerProfile?
   projects Project[]
   refreshTokens RefreshToken[]
+  challengeAttempts ChallengeAttempt[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -95,6 +101,7 @@ model Challenge{
   difficulty Difficulty @default(MEDIUM)
   learningObjectives String[]
   challengeOrder Int
+  challengeAttempts ChallengeAttempt[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([projectId, challengeOrder])
@@ -110,3 +117,17 @@ model RefreshToken{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model ChallengeAttempt{
+  id String @id @default(uuid())
+  challengeId String
+  userId String
+  challenge Challenge @relation(fields:[challengeId], references:[id], onDelete: Cascade)
+  user User @relation(fields: [userId], references:[id], onDelete: Cascade)
+  status AttemptStatus @default(IN_PROGRESS)
+  hintsUsed       Int @default(0)
+  pseudocodeUsed  Int @default(0)
+  solutionUsed    Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  }

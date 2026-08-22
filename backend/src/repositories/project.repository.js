@@ -12,7 +12,19 @@ const createChallenge = (challengeData, tx = prisma) => {
   });
 };
 
-const getAllProject = (userId)=>{
-    return prisma.project.findMany({where:{userId}})
+const getAllProject = (userId) => {
+  return prisma.project.findMany({ where: { userId } })
 }
-module.exports = {createProject,createChallenge,getAllProject}
+
+const getProjectById = (id, userId) => {
+  return prisma.project.findFirst({ where: { id, userId } })
+}
+
+const updateProject = (id, status, userId) => {
+  return prisma.project.update({ where: { id, userId }, data: { status } })
+}
+
+const deleteProject = (id, userId) => {
+  return prisma.project.delete({ where: { id, userId } })
+}
+module.exports = { createProject, createChallenge, getAllProject, getProjectById, updateProject, deleteProject }

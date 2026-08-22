@@ -27,6 +27,10 @@ const generatedProjectValidation = z.object({
   )
 });
 
+const updateProjectValidation = z.object({
+  status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETED', 'ABANDONED'])
+})
+
 module.exports = {
-  generatedProjectValidation, createProjectValidation
+  generatedProjectValidation, createProjectValidation, updateProjectValidation
 };

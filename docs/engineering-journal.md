@@ -1120,3 +1120,48 @@ The application can now successfully take an authenticated learner's profile and
 
 Current next step:
 **Begin integrating the frontend to connect with these backend APIs and build out the UI for profile management and project viewing.**
+
+---
+
+# Day 7 - Full Project CRUD and Challenge Tracking
+
+## Where we were before
+
+The backend could generate AI projects based on learner profiles, but learners had no way to view their list of projects, update a project's status, delete a project, or view the challenges inside a project. Additionally, there was no way to track a learner's progress on an individual challenge.
+
+## What changed in this phase
+
+### Full Project CRUD
+- Added `getAllProject`, `getProjectById`, `updateProject`, and `deleteProject` methods in `project.repository.js`.
+- Exposed routes `GET /api/project`, `GET /api/project/:id`, `PATCH /api/project/:id`, and `DELETE /api/project/:id` in `project.routes.js`.
+- Implemented `updateProjectValidation` in `project.validation.js` to ensure the project status transitions through safe enums (`ACTIVE`, `PAUSED`, `COMPLETED`, `ABANDONED`).
+
+### Challenge Access and Progress Tracking
+- Exposed new routes in `project.routes.js` for fetching challenges related to a project (`GET /:projectId/challenges` and `GET /:projectId/challenges/:id`).
+- Created `challenge.controller.js`, `challenge.service.js`, and `challenge.repository.js` to handle fetching challenges.
+- Added a new `ChallengeAttempt` model to the Prisma schema (`schema.prisma`).
+
+### The ChallengeAttempt Model
+The new `ChallengeAttempt` model tracks a learner's actual progress on a specific challenge:
+- Tracks `status` (`IN_PROGRESS`, `COMPLETED`, `FAILED`).
+- Tracks the number of hints, pseudocode, and solution unlocks used (`hintsUsed`, `pseudocodeUsed`, `solutionUsed`).
+- Connects back to the `Challenge` and `User` with `onDelete: Cascade`.
+
+### Database Configuration Update
+- Updated `schema.prisma` datasource URL to properly read from the `DATABASE_URL` environment variable.
+
+## Why this matters
+
+The AI should not just generate projects and disappear. The core idea is an *adaptive mentor*. By introducing `ChallengeAttempt` and tracking exactly how many hints or solutions a learner uses, the application now has the foundation to observe struggle. Later, the AI can use this data to intervene differently based on how often a learner relies on hints.
+
+## Lessons learned
+
+### Tracking struggle is key to adaptive learning
+Without `ChallengeAttempt`, we only know if a project exists. With it, we know *how* the learner is engaging with the challenge. This aligns perfectly with the initial product philosophy: "AI shouldn't write your code. AI should make you capable of writing it."
+
+## Current status updated
+
+The backend now supports full project management and has the database foundation for tracking learner struggle and progress on individual challenges.
+
+Current next step:
+**Implement the API endpoints to start, update, and complete `ChallengeAttempt` records, and hook up the adaptive hint logic with Gemini.**
