@@ -1165,3 +1165,83 @@ The backend now supports full project management and has the database foundation
 
 Current next step:
 **Implement the API endpoints to start, update, and complete `ChallengeAttempt` records, and hook up the adaptive hint logic with Gemini.**
+
+---
+
+# Day 8 - AI Mentorship Loop, Evaluation & Adaptive Challenge Engine
+
+## Where we were before
+
+In Day 7, we laid the database foundations for project CRUD and created the `ChallengeAttempt` schema. However, there were no API endpoints for learners to start attempts, request progressive guidance (hints, pseudocode, solutions), submit code for evaluation, or dynamically adapt challenge difficulty based on learner struggle.
+
+## What changed in this phase
+
+### 1. Challenge Attempt Lifecycle Management
+- Created `challengeAttempt.repository.js`, `challengeAttempt.service.js`, and `challengeAttempt.controller.js`.
+- Exposed CRUD attempt endpoints under `/api/challenge/:challengeId/attempts`:
+  - `POST /api/challenge/:challengeId/attempts` (Start attempt)
+  - `GET /api/challenge/:challengeId/attempts/:attemptId` (Get attempt details)
+  - `GET /api/challenge/:challengeId/attempts` (List attempts for a challenge)
+  - `PATCH /api/challenge/:challengeId/attempts/:attemptId` (Update attempt state)
+- Updated Prisma schema with `ChallengeStatus` (`IN_PROGRESS`, `COMPLETED`) and refined `ChallengeDifficulty` enums (`EASY`, `MEDIUM`, `HARD`).
+
+### 2. Progressive AI Help System (Mentor Guidance)
+Implemented the core tier of progressive assistance through dedicated endpoints under `attemptHelp.routes.js`:
+- `POST /api/challenges/:challengeId/hint`: Generates structured hints without giving away complete code; automatically increments `hintsUsed` on the learner's in-progress attempt.
+- `POST /api/challenges/:challengeId/pseudocode`: Generates high-level algorithmic pseudocode steps without raw code syntax; automatically increments `pseudocodeUsed`.
+- `POST /api/challenges/:challengeId/solution`: Unlocks full reference solution, explanation, and working code as a last resort; marks the attempt and challenge as `COMPLETED` and increments `solutionUsed`.
+
+### 3. Submission & Code Evaluation Engine
+- Implemented `submission.routes.js`, `submission.controller.js`, and `submitAttempt.service.js` (`POST /api/attempts/:attemptId/submit`).
+- Utilized Gemini via `generateEvaluation()` in `ai.service.js` with structured JSON schema output:
+  - Validates logical correctness separately from syntax errors.
+  - Prevents hardcoded solutions tailored only to sample cases from passing.
+  - Returns actionable feedback.
+  - Updates attempt status (`COMPLETED` vs `FAILED`) and marks the challenge as completed when logic passes.
+
+### 4. Dynamic Adaptive Challenge Engine
+- Added `adaptiveChallenge.routes.js`, `adaptiveChallenge.controller.js`, and `adaptiveChallenge.service.js` (`POST /api/challenges/:projectId/adaptive`).
+- Analyzes previous completed challenges and historical struggle signals (hints, pseudocode, solutions, and failed attempts).
+- Generates personalized follow-up challenges matching the learner's demonstrated competency and learning objectives.
+- Incrementally appends new challenges using dynamic sequence ordering (`challengeOrder`).
+
+### 5. Enhanced AI Integration & Strict Schema Validation
+- Enhanced `ai.service.js` to support `generateAdaptiveChallenges`, `generateEvaluation`, `generateHint`, `generatePseudocode`, and `generateSolution`.
+- Updated `generateProject` to accept learner history (`previousProjects`) to avoid duplicate curriculum generation.
+- Added strict Zod validation schemas across all new interfaces (`adaptiveChallenge.validation.js`, `attemptHelp.validation.js`, `challengeAttempt.validation.js`, and `userSubmission.validation.js`).
+
+## Architecture Overview
+
+```text
+Learner Client
+    │
+    ├──▶ POST /api/challenge/:id/attempts (Start Attempt)
+    │
+    ├──▶ Progressive Help
+    │    ├── POST /api/challenges/:id/hint (hintsUsed++)
+    │    ├── POST /api/challenges/:id/pseudocode (pseudocodeUsed++)
+    │    └── POST /api/challenges/:id/solution (solutionUsed++, marks COMPLETED)
+    │
+    ├──▶ POST /api/attempts/:id/submit ──▶ AI Evaluation ──▶ COMPLETED / FAILED
+    │
+    └──▶ POST /api/challenges/:projectId/adaptive ──▶ Analyze Struggle ──▶ Generate Next Challenges
+```
+
+## Lessons learned
+
+### Decoupling Syntax from Logic in AI Evaluation
+Prompt engineering and response schema validation were configured so the LLM distinguishes between minor syntax slips and structural algorithmic flaws. This gives learners constructive feedback rather than a binary pass/fail without guidance.
+
+### Closing the Adaptive Learning Loop
+Adaptive learning cannot rely solely on self-reported user surveys. By tracking telemetry (number of hint requests, reliance on pseudocode, failed submissions), the backend constructs a real-time behavioral profile that feeds into the next challenge generation cycle.
+
+## Mistakes / Problems from this phase
+- Need to ensure robust rate limiting and token budgeting on the AI endpoints since users can trigger multiple hint and evaluation requests.
+- Need end-to-end integration tests to verify database state transitions across the full attempt -> help -> submit -> adaptive challenge lifecycle.
+
+## Current status updated
+
+The core AI Mentorship engine is now fully functional on the backend. The API handles the entire learning lifecycle: project generation, attempt management, multi-tier AI assistance, intelligent evaluation, and adaptive curriculum progression.
+
+Current next step:
+**Begin frontend integration: build the interactive challenge workspace UI with the code editor, hint/help drawers, submission feedback display, and adaptive progression cards.**

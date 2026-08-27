@@ -20,7 +20,6 @@ const generatedProjectValidation = z.object({
         "EASY",
         "MEDIUM",
         "HARD",
-        "ADAPTIVE"
       ]),
       learningObjectives: z.array(z.string()).min(1)
     })

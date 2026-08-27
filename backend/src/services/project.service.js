@@ -1,6 +1,6 @@
 const { getLearnerProfileByUserId } = require('../repositories/profile.repository')
 const { createProject, createChallenge, getAllProject, getProjectById, updateProject, deleteProject } = require('../repositories/project.repository');
-const generateProject = require('./ai.service');
+const {generateProject} = require('./ai.service');
 const prisma = require('../db/db')
 const createProjectService = async (userId) => {
     const profile = await getLearnerProfileByUserId(userId)
@@ -9,7 +9,8 @@ const createProjectService = async (userId) => {
         err.statusCode = 400;
         throw err;
     }
-    const generatedProject = await generateProject(profile)
+    const previousProjects = await getAllProject(userId)
+    const generatedProject = await generateProject(profile,previousProjects)
     const project = await prisma.$transaction(async (tx) => {
         const project = await createProject({
             userId,

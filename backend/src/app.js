@@ -2,6 +2,10 @@ const express = require('express')
 const authRoutes = require('./routes/auth.routes')
 const profileRoutes = require('./routes/profile.routes')
 const projectRoutes = require('./routes/project.routes')
+const challengeAttemptRoutes = require('./routes/challengeAttempt.routes')
+const adaptiveChallengeRoutes = require('./routes/adaptiveChallenge.routes')
+const submissionRoutes = require('./routes/submission.routes')
+const attemptHelpRotes = require('./routes/attemptHelp.routes')
 const app = express()
 const cookieParser = require('cookie-parser')
 app.use(express.json());
@@ -30,6 +34,10 @@ app.get('/test-error',(req,res,next)=>{
 app.use('/api/auth',authRoutes)
 app.use('/api/profile',profileRoutes)
 app.use('/api/project',projectRoutes)
+app.use('/api/challenge',challengeAttemptRoutes)
+app.use("/api", adaptiveChallengeRoutes);
+app.use('/api',submissionRoutes)
+app.use('/api',attemptHelpRotes)
 app.use((req,res,next)=>{
     res.status(404).json({
         status: 404,
