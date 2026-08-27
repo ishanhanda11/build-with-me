@@ -78,23 +78,25 @@ This project is being built to:
 
 ## Current Status
 
-✅ Backend foundation is now in progress beyond the initial architecture phase.
+✅ **Backend AI Mentorship & Adaptive Learning Engine is fully functional!**
 
-The project has moved from a basic skeleton into a working backend structure with:
+The backend architecture includes:
 
-* Express API setup with middleware, routes, 404s, and centralized error handling
-* PostgreSQL + Prisma database foundation with user, learner profile, project, challenge, and refresh token models
-* User authentication flow with registration, login, refresh token rotation, and logout
-* Protected profile creation route using JWT access-token validation
-* Request validation with Zod for auth and learner profile inputs
-* Cookie-based session handling for access and refresh tokens
+* **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation and revocation.
+* **Learner Profile Management**: Profile CRUD with learning style, target timeframe, and experience preferences.
+* **AI Project Generation**: Dynamic project & curriculum generation using Google Gemini with structured Zod output validation.
+* **Project & Challenge CRUD**: Full lifecycle management for projects and sequential challenge breakdown.
+* **Attempt Tracking & Struggle Telemetry**: `ChallengeAttempt` tracking capturing hints used, pseudocode requests, and solution unlocks.
+* **Multi-Tier Progressive Help**: Tiered AI guidance endpoints (`/hint`, `/pseudocode`, `/solution`) to mentor rather than give direct answers.
+* **AI Code Evaluation Engine**: Submissions evaluated by Gemini with separate logic and syntax verification to prevent trivial hardcoded answers.
+* **Adaptive Challenge Progression**: Dynamic challenge generation engine that analyzes previous struggle telemetry to tailor subsequent challenges.
+* **Database & ORM**: PostgreSQL with Prisma ORM and versioned migrations.
 
 ## What is next
 
-* Build the project and challenge generation flow
-* Add AI prompt and evaluation service integration
-* Expand the app from auth/profile setup into adaptive learning workflows
-* Add real tests, environment configuration, and deployment preparation
+* 🚀 **Frontend Development**: Build the interactive React interface (Code Editor workspace, progressive hint drawers, evaluation modal, and project dashboard).
+* 🧪 **Testing & Quality**: Add end-to-end integration tests for the full attempt/evaluation lifecycle.
+* 📦 **Deployment & CI/CD**: Containerization and cloud deployment setup on Vercel/Render.
 
 ## Documentation
 
