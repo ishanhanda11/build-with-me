@@ -27,4 +27,6 @@ const updateProject = (id, status, userId) => {
 const deleteProject = (id, userId) => {
   return prisma.project.delete({ where: { id, userId } })
 }
+
+
 module.exports = { createProject, createChallenge, getAllProject, getProjectById, updateProject, deleteProject }

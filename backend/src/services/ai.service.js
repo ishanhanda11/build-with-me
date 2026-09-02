@@ -94,6 +94,18 @@ Project Requirements:
   target timeframe.
 - Avoid unnecessary complexity.
 - Do not add features merely to make the project appear advanced.
+8. PROJECT LENGTH
+- Determine an appropriate total number of challenges for this project.
+- The project must contain at least 8 challenges.
+- The project may contain more than 8 challenges when the project's scope
+  genuinely requires additional learning stages.
+- The maximum allowed is 20 challenges.
+- Do not choose a larger number merely to make the project appear more advanced.
+- Consider the learner's experience level, available hours per day,
+  target timeframe, project complexity, and number of distinct skills that
+  should be learned.
+- The value represents the TOTAL number of challenges the project should
+  eventually contain, including the initial 2 challenges.
 
 Before generating the final project, consider multiple possible project
 ideas internally and select the one that is most useful, practical,
@@ -117,6 +129,11 @@ Return exactly 2 challenges and no more.
           description: {
             type: "string"
           },
+          maxChallenges: {
+            type: "integer",
+            minimum: 8,
+            maximum: 20
+        },
           challenges: {
             type: "array",
             minItems: 2,
@@ -150,7 +167,7 @@ Return exactly 2 challenges and no more.
             }
           }
         },
-        required: ["title", "description", "challenges"]
+        required: ["title", "description","maxChallenges","challenges"]
       }
     }
   });

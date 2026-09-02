@@ -1,9 +1,7 @@
-
-const { getChallengeForUser, updateChallenge } = require("../repositories/challenge.respository");
-const { getInProgressAttempt, createAttempt } = require("../repositories/challengeAttempt.repository");
+const prisma = require('../db/db')
+const { getChallengeForUser, updateChallenge, createChallengeHelp } = require("../repositories/challenge.respository");
+const { getInProgressAttempt, createAttempt, updateAttempt } = require("../repositories/challengeAttempt.repository");
 const { generateHint, generatePseudocode, generateSolution } = require("./ai.service");
-const { updateAttemptService } = require("./challengeAttempt.service")
-
 
 const requestHintService = async (challengeId,userId) =>{
     const challenge = await getChallengeForUser(challengeId,userId)
@@ -19,10 +17,7 @@ const requestHintService = async (challengeId,userId) =>{
     }
     const hint = await generateHint(challenge)
     
-    let attempt = await getInProgressAttempt(
-        challengeId,
-        userId
-    );
+    let attempt = await getInProgressAttempt(challengeId, userId);
 
     if (!attempt) {
         attempt = await createAttempt({
@@ -30,10 +25,26 @@ const requestHintService = async (challengeId,userId) =>{
             userId
         });
     }
-    const updatedAttempt = await updateAttemptService(attempt.id,userId,{hintsUsed: attempt.hintsUsed + 1 })
+    const result = await prisma.$transaction(async(tx)=>{
+        const updatedAttempt = await updateAttempt(
+            attempt.id,
+            {
+                hintsUsed: attempt.hintsUsed + 1
+            },
+            tx
+        )
+
+        await createChallengeHelp({
+            attemptId: attempt.id,
+            type: "HINT",
+            content: hint
+        }, tx)
+
+        return updatedAttempt
+    })
     return {
         hint,
-        attempt: updatedAttempt
+        attempt: result
     };
 }
 
@@ -61,10 +72,25 @@ const requestPseudocodeService = async (challengeId,userId) =>{
             userId
         });
     }
-    const updatedAttempt = await updateAttemptService(attempt.id,userId,{pseudocodeUsed: attempt.pseudocodeUsed + 1})
+    const result = await prisma.$transaction(async(tx)=>{
+        const updatedAttempt = await updateAttempt(
+            attempt.id,
+            {
+                pseudocodeUsed: attempt.pseudocodeUsed + 1
+            },
+            tx
+        )
+
+        await createChallengeHelp({
+            attemptId: attempt.id,
+            type: "PSEUDOCODE",
+            content: pseudocode
+        }, tx)
+        return updatedAttempt
+    })
     return {
         pseudocode: pseudocode,
-        attempt: updatedAttempt
+        attempt: result
     }
 }
 
@@ -91,12 +117,38 @@ const requestSolutionService = async (challengeId, userId)=>{
             userId
         });
     }
-    const updatedAttempt = await updateAttemptService(attempt.id,userId,{status:'COMPLETED',solutionUsed: attempt.solutionUsed + 1})
-    await updateChallenge(challengeId,{status:"COMPLETED"})
+    const result = await prisma.$transaction(async (tx) => {
+
+        const updatedAttempt = await updateAttempt(
+            attempt.id,
+            {
+                status: "COMPLETED",
+                solutionUsed: attempt.solutionUsed + 1
+            },
+            tx
+        )
+
+        await createChallengeHelp({
+            attemptId: attempt.id,
+            type: "SOLUTION",
+            content: solution
+        }, tx)
+
+        await updateChallenge(
+            challengeId,
+            { status: "COMPLETED" },
+            tx
+        )
+
+        return updatedAttempt
+    })
+
     return {
         solution,
-        attempt: updatedAttempt
+        attempt: result
     }
+    
+    
 }
 
 module.exports = {requestHintService,requestPseudocodeService,requestSolutionService}

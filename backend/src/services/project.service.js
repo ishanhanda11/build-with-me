@@ -15,7 +15,8 @@ const createProjectService = async (userId) => {
         const project = await createProject({
             userId,
             title: generatedProject.title,
-            description: generatedProject.description
+            description: generatedProject.description,
+            maxChallenges: generatedProject.maxChallenges
         }, tx)
 
         for (const [index, challenge] of generatedProject.challenges.entries()) {
@@ -63,6 +64,11 @@ const updateProjectService = async (id, status, userId) => {
     }
     if (project.status === 'COMPLETED') {
         const err = new Error("Project is already completed");
+        err.statusCode = 400;
+        throw err;
+    }
+    if (project.status === 'ABANDONED') {
+        const err = new Error("Project is abandoned. Status cannot be updated.");
         err.statusCode = 400;
         throw err;
     }

@@ -1245,3 +1245,74 @@ The core AI Mentorship engine is now fully functional on the backend. The API ha
 
 Current next step:
 **Begin frontend integration: build the interactive challenge workspace UI with the code editor, hint/help drawers, submission feedback display, and adaptive progression cards.**
+
+---
+
+# Day 9 - Challenge Help History, Project Max Scope, and State Consistency
+
+## Where we were before
+
+In Day 8, we completed the core mentorship loop: starting attempts, requesting progressive AI help, submitting code for evaluation, and generating adaptive challenges. However:
+1. Help requests and submitted code evaluations were only tracked as increment counters (`hintsUsed`, `pseudocodeUsed`, `solutionUsed`) rather than preserving the actual generated AI guidance and user submissions.
+2. Projects had no defined target scope or total length boundary.
+3. Multiple database updates across attempts and help logs were not wrapped in atomic database transactions.
+4. Learners could potentially jump ahead and submit challenges out of order.
+
+## What changed in this phase
+
+### 1. `ChallengeHelp` Model & Full Help History
+- Added the `ChallengeHelp` Prisma model and `HelpType` enum (`HINT`, `PSEUDOCODE`, `SOLUTION`, `USER_SOLUTION`, `EVALUATION`).
+- Created Prisma migrations:
+  - `20260901071101_add_challenge_help_history`
+  - `20260902082207_add_submission_help_types`
+- Implemented `/api/challenges/:challengeId/help` (`challengeHelp.routes.js`, `challengeHelp.controller.js`, `challenge.help.service.js`) allowing the frontend to load the full chronological history of hints, pseudocode, solutions, user submissions, and evaluation reports.
+
+### 2. Project Scope Control (`maxChallenges`)
+- Added `maxChallenges` (default 8, min 8, max 20) to `Project` model.
+- Updated `ai.service.js` to instruct Gemini to determine the total challenge count based on the learner's experience, available hours, target timeframe, and project complexity.
+- Updated `adaptChallengeService` to calculate `remainingSlots` and stop generating new challenges once the project reaches its `maxChallenges` quota.
+- Automatic completion: When the total challenge count matches `maxChallenges` and all challenges are `COMPLETED`, the project status automatically transitions to `COMPLETED`.
+
+### 3. Atomic Database Transactions & Data Integrity
+- Refactored `attemptHelp.service.js` and `submitAttempt.service.js` using `prisma.$transaction`.
+- Updating attempt metrics, creating `ChallengeHelp` audit records, and updating challenge/project statuses are now executed in atomic transaction blocks to prevent inconsistent states if any query fails.
+
+### 4. Sequential Challenge Enforcement & State Guardrails
+- Added `getPreviousChallenge` in `challenge.repository.js` and verified that previous challenges are `COMPLETED` before allowing submissions on subsequent challenges.
+- Blocked submissions and updates on `ABANDONED` or `COMPLETED` projects.
+- Auto-reactivated `PAUSED` projects when a learner resumes and submits code.
+- Prevented manual status changes to `COMPLETED` via `updateProjectValidation` (status is managed by completion logic).
+- Fixed typo in profile controller responses (`messsage` -> `message`) and improved token revocation HTTP status codes (401).
+
+## Architecture Overview
+
+```text
+Learner Client
+    │
+    ├──▶ POST /api/challenges/:id/hint ──▶ [tx: hintsUsed++, save ChallengeHelp(HINT)]
+    ├──▶ POST /api/challenges/:id/pseudocode ──▶ [tx: pseudocodeUsed++, save ChallengeHelp(PSEUDOCODE)]
+    ├──▶ POST /api/challenges/:id/solution ──▶ [tx: solutionUsed++, save ChallengeHelp(SOLUTION), complete Challenge]
+    │
+    ├──▶ POST /api/challenges/:id/submit ──▶ Validate Sequential Order
+    │                                    ──▶ Gemini Code Evaluation
+    │                                    ──▶ [tx: update Attempt, save USER_SOLUTION & EVALUATION]
+    │                                    ──▶ Check maxChallenges: Auto-complete Project or Trigger Adaptive Gen
+    │
+    └──▶ GET /api/challenges/:id/help ──▶ Retrieve complete chronological interaction history
+```
+
+## Lessons learned
+
+### Preserving Interaction History Over Plain Counters
+Counters (`hintsUsed: 3`) tell us *how much* help was used, but not *what* was suggested or *what* the learner submitted. Storing structured `ChallengeHelp` records enables the frontend to persist conversation state across reloads and allows future AI context prompts to review previous attempts and feedback.
+
+### Enforcing Strict State Transitions
+Allowing arbitrary status updates can cause broken learning progressions. Restricting manual status mutations (e.g. keeping `COMPLETED` system-driven) and enforcing sequential prerequisites ensures data consistency.
+
+## Current status updated
+
+The backend architecture is complete, transactional, and resilient. It supports full project lifecycles with bounded scopes, progressive mentorship, persistent interaction histories, automated evaluation, and sequential enforcement.
+
+Current next step:
+**Develop the React frontend workspace: connect authentication cookies, build the project explorer, interactive code editor, sequential challenge roadmap, and real-time help/evaluation drawer.**
+

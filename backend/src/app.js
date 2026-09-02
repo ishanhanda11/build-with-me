@@ -6,6 +6,7 @@ const challengeAttemptRoutes = require('./routes/challengeAttempt.routes')
 const adaptiveChallengeRoutes = require('./routes/adaptiveChallenge.routes')
 const submissionRoutes = require('./routes/submission.routes')
 const attemptHelpRotes = require('./routes/attemptHelp.routes')
+const challengeHelpRoutes = require('./routes/challengeHelp.routes')
 const app = express()
 const cookieParser = require('cookie-parser')
 app.use(express.json());
@@ -38,6 +39,7 @@ app.use('/api/challenge',challengeAttemptRoutes)
 app.use("/api", adaptiveChallengeRoutes);
 app.use('/api',submissionRoutes)
 app.use('/api',attemptHelpRotes)
+app.use('/api',challengeHelpRoutes)
 app.use((req,res,next)=>{
     res.status(404).json({
         status: 404,

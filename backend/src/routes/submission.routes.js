@@ -5,5 +5,5 @@ const { userSubmissionValidation } = require('../validators/userSubmission.valid
 const { attemptSubmissionController } = require('../controllers/submission.controller')
 const router = express.Router()
 
-router.post('/attempts/:attemptId/submit', authenticate, validate(userSubmissionValidation), attemptSubmissionController)
+router.post('/challenges/:challengeId/submit', authenticate, validate(userSubmissionValidation), attemptSubmissionController)
 module.exports = router

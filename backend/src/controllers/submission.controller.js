@@ -6,12 +6,12 @@ const attemptSubmissionController = async (req,res,next)=>{
     if(!userId){
         return res.status(401).json({message: "userId does not exist"})
     }
-    const attemptId = req.params.attemptId
-    if(!attemptId){
+    const challengeId = req.params.challengeId
+    if(!challengeId){
         return res.status(400).json({message: "invalid attemptId"})
     }
     const { solution } = req.body;
-    const response = await submitAttemptService(attemptId,userId,solution)
+    const response = await submitAttemptService(challengeId,userId,solution)
     res.status(200).json({
         message: "solution submitted successfully",
         response

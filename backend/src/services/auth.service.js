@@ -78,10 +78,14 @@ const newSession = async (token) =>{
        throw new Error("Invalid refresh token");
     }
     if (validToken.revokedAt){
-        throw new Error('Token has been revoked')
+        const err = new Error('Token has been revoked')
+        err.statusCode = 401
+        throw err
     }
     if (validToken.expiresAt < new Date()) {
-    throw new Error("Token has expired");
+        const err = new Error("Token has expired");
+        err.statusCode = 401
+        throw err
 }
     const decoded = jwt.verify(token,process.env.JWT_REFRESH_SECRET)
     const accessToken = generateAccessToken(decoded.userId)

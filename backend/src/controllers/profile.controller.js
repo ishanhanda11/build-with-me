@@ -8,7 +8,7 @@ const createProfileController = async (req,res,next) =>{
         }
         const result = await createProfile(req.body,userId)
         return res.status(201).json({
-            messsage: result.message,
+            message: result.message,
             profile: result.profile
         })
     }catch(err){
@@ -24,7 +24,7 @@ const getProfileController = async (req,res,next)=>{
         }
         const result = await getProfile(userId)
         return res.status(200).json({
-            messsage: result.message,
+            message: result.message,
             profile: result.profile
         })
     }catch(err){

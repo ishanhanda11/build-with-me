@@ -30,8 +30,8 @@ const getInProgressAttempt = (challengeId,userId)=>{
     }
     )
 }
-const updateAttempt = (attemptId, data) => {
-    return prisma.challengeAttempt.update({
+const updateAttempt = (attemptId, data,tx=prisma) => {
+    return tx.challengeAttempt.update({
         where: { id: attemptId},
         data
     });

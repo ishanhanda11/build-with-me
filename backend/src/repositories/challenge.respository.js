@@ -49,9 +49,26 @@ const getPreviousChallenges = (projectId) => {
     take: 2
   });
 };
-
-const updateChallenge = (challengeId, data) => {
-    return prisma.challenge.update({
+const getPreviousChallenge = (projectId, challengeOrder) => {
+    return prisma.challenge.findFirst({
+        where: {
+            projectId,
+            challengeOrder: challengeOrder - 1
+        }
+    });
+};
+const getChallengeCount = (projectId) =>{
+  return prisma.challenge.count({
+    where:{
+      projectId
+    }
+  })
+}
+const getCompletedChallengeCount=(projectId)=>{
+  return prisma.challenge.count({where: {projectId, status:'COMPLETED'}})
+}
+const updateChallenge = (challengeId, data, tx=prisma) => {
+    return tx.challenge.update({
         where: {
             id: challengeId
         },
@@ -59,11 +76,34 @@ const updateChallenge = (challengeId, data) => {
     });
 };
 
+const createChallengeHelp = (data, tx = prisma) => {
+    return tx.challengeHelp.create({
+        data
+    })
+}
+const getChallengeHelps = (challengeId, userId) => {
+    return prisma.challengeHelp.findMany({
+        where: {
+            attempt: {
+                challengeId,
+                userId
+            }
+        },
+        orderBy: {
+            createdAt: "asc"
+        }
+    });
+};
 module.exports = {
   getChallenges,
   getChallenge,
   getChallengeForUser,
   getLastChallenge,
+  getPreviousChallenge,
   getPreviousChallenges,
-  updateChallenge
+  getChallengeCount,
+  getCompletedChallengeCount,
+  updateChallenge,
+  createChallengeHelp,
+  getChallengeHelps
 };

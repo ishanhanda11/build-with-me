@@ -97,6 +97,7 @@ model Project{
   challenges Challenge[]
   title String
   description String?
+  maxChallenges Int @default(8)
   status ProjectStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,6 +140,26 @@ model ChallengeAttempt{
   hintsUsed       Int @default(0)
   pseudocodeUsed  Int @default(0)
   solutionUsed    Int @default(0)
+  helpRequests ChallengeHelp[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   }
+
+
+enum HelpType {
+  HINT
+  PSEUDOCODE
+  SOLUTION
+  USER_SOLUTION
+  EVALUATION 
+}
+
+model ChallengeHelp{
+  id String @id @default(uuid())
+  attemptId String
+  type HelpType
+  content Json
+  createdAt DateTime @default(now())
+  attempt ChallengeAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+}
+

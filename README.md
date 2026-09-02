@@ -84,18 +84,19 @@ The backend architecture includes:
 
 * **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation and revocation.
 * **Learner Profile Management**: Profile CRUD with learning style, target timeframe, and experience preferences.
-* **AI Project Generation**: Dynamic project & curriculum generation using Google Gemini with structured Zod output validation.
-* **Project & Challenge CRUD**: Full lifecycle management for projects and sequential challenge breakdown.
-* **Attempt Tracking & Struggle Telemetry**: `ChallengeAttempt` tracking capturing hints used, pseudocode requests, and solution unlocks.
+* **AI Project Generation & Scope Control**: Dynamic curriculum generation using Google Gemini with dynamic `maxChallenges` bounds (8–20) tailored to learner capacity.
+* **Project & Challenge CRUD**: Full lifecycle management with strict sequential progression prerequisites.
+* **Attempt Tracking & Struggle Telemetry**: `ChallengeAttempt` tracking hints used, pseudocode requests, and solution unlocks.
+* **Audit & Interaction History**: `ChallengeHelp` model recording full chronological history of hints, pseudocode, solutions, user code submissions, and Gemini evaluations.
 * **Multi-Tier Progressive Help**: Tiered AI guidance endpoints (`/hint`, `/pseudocode`, `/solution`) to mentor rather than give direct answers.
 * **AI Code Evaluation Engine**: Submissions evaluated by Gemini with separate logic and syntax verification to prevent trivial hardcoded answers.
-* **Adaptive Challenge Progression**: Dynamic challenge generation engine that analyzes previous struggle telemetry to tailor subsequent challenges.
-* **Database & ORM**: PostgreSQL with Prisma ORM and versioned migrations.
+* **Adaptive Challenge Progression**: Dynamic challenge engine analyzing struggle telemetry to synthesize personalized follow-up challenges.
+* **Database Transactions & ORM**: PostgreSQL with Prisma ORM, atomic `$transaction` consistency, and versioned migrations.
 
 ## What is next
 
 * 🚀 **Frontend Development**: Build the interactive React interface (Code Editor workspace, progressive hint drawers, evaluation modal, and project dashboard).
-* 🧪 **Testing & Quality**: Add end-to-end integration tests for the full attempt/evaluation lifecycle.
+* 🧪 **Testing & Quality**: Add automated integration tests covering the attempt -> help -> submission -> adaptive challenge cycle.
 * 📦 **Deployment & CI/CD**: Containerization and cloud deployment setup on Vercel/Render.
 
 ## Documentation

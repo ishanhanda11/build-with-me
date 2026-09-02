@@ -1,4 +1,4 @@
-const { getChallengeForUser, getLastChallenge, getPreviousChallenges } = require("../repositories/challenge.respository");
+const { getChallengeForUser, getLastChallenge, getPreviousChallenges, getChallengeCount } = require("../repositories/challenge.respository");
 const { createChallenge, getProjectById } = require("../repositories/project.repository");
 const { generateAdaptiveChallenges } = require("./ai.service");
 const { getAllAttemptsService } = require("./challengeAttempt.service");
@@ -20,11 +20,7 @@ const adaptChallengeService = async (userId, projectId) => {
 
   // The latest 2 challenges must exist before starting an adaptive cycle
   if (previousChallenges.length < 2) {
-    const err = new Error(
-      "Adaptive challenges cannot be generated yet."
-    );
-    err.statusCode = 400;
-    throw err;
+    return null
   }
 
   // Both previous challenges must be completed
@@ -33,16 +29,17 @@ const adaptChallengeService = async (userId, projectId) => {
   );
 
   if (!allCompleted) {
-    const err = new Error(
-      "Previous challenges must be completed before generating new challenges."
-    );
-    err.statusCode = 400;
-    throw err;
+    return null
   }
 
+  const challengeCount = await getChallengeCount(projectId)
+  if (challengeCount >= project.maxChallenges) {
+    return null;
+}
+
+  const remainingSlots = project.maxChallenges - challengeCount;
   // Get attempts for both previous challenges
   const attempts = [];
-
   for (const challenge of previousChallenges) {
     const challengeAttempts = await getAllAttemptsService(
       challenge.id,
@@ -65,10 +62,10 @@ const adaptChallengeService = async (userId, projectId) => {
   let nextOrder = lastChallenge
     ? lastChallenge.challengeOrder + 1
     : 1;
-
+  const challengesToCreate = generated.challenges.slice(0, remainingSlots);
   const newChallenges = [];
 
-  for (const challenge of generated.challenges) {
+  for (const challenge of challengesToCreate) {
 
     const newChallenge = await createChallenge({
       projectId,
