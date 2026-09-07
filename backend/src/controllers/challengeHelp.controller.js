@@ -1,4 +1,4 @@
-const { getChallengeHelpService } = require("../services/challenge.help.service")
+const { getChallengeHelpService, getUserHelpCountService } = require("../services/challenge.help.service")
 
 const challengeHelpController = async(req,res,next)=>{
     try{
@@ -21,4 +21,20 @@ const challengeHelpController = async(req,res,next)=>{
 }
 }
 
-module.exports = {challengeHelpController}
+const getUserHelpCountController = async (req, res, next) => {
+    try {
+        const { userId } = req.user
+        if (!userId) {
+            return res.status(401).json({ message: "UserId does not exist." })
+        }
+        const count = await getUserHelpCountService(userId)
+        res.status(200).json({
+            message: "Help requests count fetched successfully.",
+            count
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+module.exports = { challengeHelpController, getUserHelpCountController }

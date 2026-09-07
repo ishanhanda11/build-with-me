@@ -173,8 +173,8 @@ function Projects() {
               </Link>
             </li>
             <li>
-              <Link to="/projects" className="nav-link">
-                Discover
+              <Link to="/about" className="nav-link">
+                About
               </Link>
             </li>
           </ul>

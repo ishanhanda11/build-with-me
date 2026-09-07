@@ -1482,4 +1482,99 @@ The platform features a complete, highly polished frontend with a unified dark s
 Current next step:
 **Redesign the single Project Roadmap page (`Project.jsx`) and Monaco Challenge Workspace (`SolveChallenge.jsx`) to align with the new design system.**
 
+---
+
+# Day 12 — Monaco Multi-Language Studio, Real-Time Struggle Telemetry, Direct Workspace Navigation, and Comprehensive About Architecture
+
+## Where we were before
+
+In Day 11, we overhauled the platform's visual design system, introduced the dark stone and parchment theme, rebuilt the Expedition Dashboard with interactive bento cards, and redesigned the Learner Profile dossier. However:
+1. The Monaco Editor in `SolveChallenge.jsx` was hardcoded to JavaScript, with buttons wrapping awkwardly below challenge objectives.
+2. The project roadmap navigated to an intermediate `Challenge.jsx` preview page before reaching the code workspace, creating unnecessary friction.
+3. The dashboard's "Help Requests" metric in the Journey card was a hardcoded static placeholder (`5`) rather than reflecting real database telemetry.
+4. The dashboard sidebar had unfinished placeholder links (`Quests`, `Leaderboard`, `Community`) that distracted from core engineering workflows.
+5. The top navigation had a redundant "Discover" link that simply looped back to `/projects` rather than explaining what the platform does, how it works, and its core functions.
+
+## What changed in this phase
+
+### 1. Monaco Editor Multi-Language Studio & Workspace Subbar Redesign
+- **Multi-Language Selector**: Added a language selection dropdown directly to the workspace action bar supporting **JavaScript**, **Python**, and **Java**.
+- **Dynamic Syntax & Autocomplete**: Bound `<Editor language={selectedLanguage} />` dynamically so Monaco's tokenizers, autocompletion engine, and syntax highlighting adapt in real time to the selected language.
+- **Dedicated Subbar Architecture**: Re-engineered `.solve-subbar` in `SolveChallenge.jsx` and `SolveChallenge.css`:
+  - Left side displays the challenge title, milestone badge, difficulty indicator, and completion status, with learning objectives arranged directly underneath.
+  - Right side groups the language selector, **Reset Buffer**, and **Submit Solution** buttons with `flex-wrap: nowrap` and `flex-shrink: 0`, ensuring actions never wrap awkwardly below the objectives.
+  - Cleaned up `.editor-pane` so the left workspace exclusively hosts the Monaco Editor at 100% height and width.
+
+### 2. Direct Challenge Navigation & Deprecation of Preview Page
+- **Frictionless Roadmap**: Updated the challenge card `onClick` handler in `Project.jsx` to navigate directly to the workspace route: `/projects/${projectId}/challenges/${challenge.id}/solve`.
+- **Codebase Cleanliness**:
+  - Permanently deleted `frontend/src/pages/Challenge.jsx`.
+  - Removed `import Challenge from "./pages/Challenge"` and its obsolete `/project/:projectId/challenges/:challengeId` route from `App.jsx`.
+
+### 3. Real-Time Help Requests Telemetry & Backend Aggregation
+- **Database Telemetry Aggregation**: Implemented `getUserTotalHelpRequests(userId)` in `backend/src/repositories/challenge.respository.js`:
+  - Queries `ChallengeHelp` records for types `HINT`, `PSEUDOCODE`, and `SOLUTION` linked to user attempts.
+  - Concurrently aggregates `hintsUsed`, `pseudocodeUsed`, and `solutionUsed` counters across all `ChallengeAttempt` records.
+  - Returns `Math.max(count, countFromAttempts)` ensuring 100% data consistency regardless of attempt state.
+- **Service & API Endpoints**:
+  - Added `getUserHelpCountService(userId)` in `challenge.help.service.js`.
+  - Added `getUserHelpCountController` in `challengeHelp.controller.js` returning `{ count }`.
+  - Mounted authenticated routes `GET /api/help/count` and `GET /api/challenges/help/count` in `challengeHelp.routes.js`.
+- **Live Dashboard Integration**:
+  - Exported `getHelpRequestsCount()` in `frontend/src/services/requestHelp.api.js`.
+  - Connected `helpRequestsCount` state to `Dashboard.jsx`, replacing the hardcoded `5` with real-time database counts fetched on load.
+
+### 4. Dashboard Sidebar Streamlining
+- Removed placeholder links (**Quests**, **Leaderboard**, and **Community**) from the sidebar in `Dashboard.jsx`.
+- Cleaned up unused icon imports (`Shield`, `Users`, `Sparkles`).
+- Kept the sidebar strictly focused on active developer tools: **Overview**, **Projects**, and **Challenges**, with the inspirational quote pinned cleanly at the bottom.
+
+### 5. Platform "About" Architecture & Navigation Overhaul
+- **Navbar Replacement**: Replaced "Discover" in the top navigation of `Dashboard.jsx`, `Projects.jsx`, and `Project.jsx` with **About**, linking to `/about`.
+- **Dedicated About Experience (`About.jsx`, `About.css`)**:
+  - Built a comprehensive, beautifully styled landing page at `/about` guarded by `ProfileGuard`.
+  - **What is Build With Me**: Explains the core philosophy—moving past passive tutorial consumption into active, synaptic mental model construction through real-world building.
+  - **What Does It Do**: Highlights project decomposition, live Monaco studio, tiered AI assistance, automated code validation, and dynamic milestone generation.
+  - **How Does It Work**: Detailed 5-stage interactive workflow (Profile Calibration → Project Generation → Monaco Coding Workspace → Contextual AI Assistance → Submission & Progression).
+  - **Functions & Features**: Technical breakdown of the multi-language code runner, real-time struggle analytics, and session-guarded persistence.
+  - **Call to Action**: Direct navigation to explore projects or return to the dashboard.
+
+## Architecture Overview
+
+```text
+React Client (Vite :5173)
+    │
+    ├── /about (Protected) ──▶ About.jsx (What it is, What it does, How it works, Features)
+    ├── / (Protected) ──▶ Dashboard.jsx (Real-time Help Requests, Cleaned Sidebar)
+    ├── /projects/:id ──▶ Project.jsx (Direct link to /solve)
+    │
+    └── /projects/:id/challenges/:id/solve ──▶ SolveChallenge.jsx
+            │
+            ├── Monaco Editor Studio (JavaScript / Python / Java Selector)
+            ├── Subbar Actions (Reset Buffer, Submit Solution)
+            ├── Objectives Row (Under Title, Non-wrapping Action Row)
+            └── Progressive AI Help Drawer (Hints, Pseudocode, Solution)
+                    │
+                    └── Telemetry Sync ──▶ GET /api/help/count (Real-time count on Dashboard)
+```
+
+## Lessons learned
+
+### Preserving Layout Integrity with Non-Wrapping Flex Actions
+When placing dynamic content (such as multiline learning objectives) in header subbars next to action buttons, failing to apply `flex-shrink: 0` and `white-space: nowrap` can cause buttons to wrap awkwardly underneath the text on smaller or dynamic displays. Separating titles and objectives into a vertical container on the left while fixing actions on the right maintains visual hierarchy and usability.
+
+### Multi-Language State Binding in Monaco Editor
+Monaco requires the `language` prop to match exact identifier keys (`javascript`, `python`, `java`). When the language selector changes, dynamically rebinding this prop seamlessly triggers Monaco's internal language worker without destroying the active buffer or losing cursor position.
+
+### Live Telemetry vs. Hardcoded Placeholders
+Displaying hardcoded metrics in dashboard bento cards undermines user trust. Exposing lightweight aggregate endpoints (`_sum` + `count`) in Prisma allows the frontend to display authentic live telemetry with minimal database overhead.
+
+## Current status updated
+
+The platform provides a cohesive, end-to-end hands-on engineering environment. The Monaco workspace supports multiple languages with direct roadmap navigation, live help requests update across the dashboard in real time, and the platform's core purpose and capabilities are documented in the new About section.
+
+Current next step:
+**Deploy application to staging/production environment, configure automated test pipelines, and implement rate limiting on AI mentorship endpoints.**
+
+
 

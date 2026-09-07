@@ -8,4 +8,10 @@ const getAllHelpHistory = async (challengeId) => {
     const response = await api.get(`/challenges/${challengeId}/help`)
     return response.data
 }
-export { requestHelp, getAllHelpHistory }
+
+const getHelpRequestsCount = async () => {
+    const response = await api.get('/help/count')
+    return response.data
+}
+
+export { requestHelp, getAllHelpHistory, getHelpRequestsCount }

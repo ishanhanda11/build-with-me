@@ -3,12 +3,12 @@ import { Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth";
 import Projects from "./pages/Projects";
 import Project from "./pages/Project";
-import Challenge from "./pages/Challenge";
 import Chat from "./pages/Chat";
 import SolveChallenge from "./pages/SolveChallenge";
 import Profile from "./pages/Profile";
 import ProfileGuard from "./components/ProfileGuard";
 import Dashboard from "./pages/DashBoard";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -18,7 +18,6 @@ function App() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/projects" element={<ProfileGuard><Projects /></ProfileGuard>} />
       <Route path="/projects/:projectId" element={<ProfileGuard><Project /></ProfileGuard>} />
-      <Route path="/project/:projectId/challenges/:challengeId" element={<ProfileGuard><Challenge /></ProfileGuard>} />
       <Route
         path="/projects/:projectId/challenges/:challengeId/chat"
         element={<ProfileGuard><Chat /></ProfileGuard>}
@@ -28,6 +27,7 @@ function App() {
         path="/projects/:projectId/challenges/:challengeId/solve"
         element={<ProfileGuard><SolveChallenge /></ProfileGuard>}
       />
+      <Route path="/about" element={<ProfileGuard><About /></ProfileGuard>} />
     </Routes>
   );
 }

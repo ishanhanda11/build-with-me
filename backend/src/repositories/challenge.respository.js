@@ -27,12 +27,12 @@ const getChallengeForUser = (challengeId, userId) => {
   });
 };
 
-const getLastChallenge = (projectId)=>{
+const getLastChallenge = (projectId) => {
   return prisma.challenge.findFirst({
-    where:{
+    where: {
       projectId
     },
-    orderBy:{
+    orderBy: {
       challengeOrder: 'desc'
     }
   })
@@ -50,50 +50,80 @@ const getPreviousChallenges = (projectId) => {
   });
 };
 const getPreviousChallenge = (projectId, challengeOrder) => {
-    return prisma.challenge.findFirst({
-        where: {
-            projectId,
-            challengeOrder: challengeOrder - 1
-        }
-    });
+  return prisma.challenge.findFirst({
+    where: {
+      projectId,
+      challengeOrder: challengeOrder - 1
+    }
+  });
 };
-const getChallengeCount = (projectId) =>{
+const getChallengeCount = (projectId) => {
   return prisma.challenge.count({
-    where:{
+    where: {
       projectId
     }
   })
 }
-const getCompletedChallengeCount=(projectId)=>{
-  return prisma.challenge.count({where: {projectId, status:'COMPLETED'}})
+const getCompletedChallengeCount = (projectId) => {
+  return prisma.challenge.count({ where: { projectId, status: 'COMPLETED' } })
 }
-const updateChallenge = (challengeId, data, tx=prisma) => {
-    return tx.challenge.update({
-        where: {
-            id: challengeId
-        },
-        data
-    });
+const updateChallenge = (challengeId, data, tx = prisma) => {
+  return tx.challenge.update({
+    where: {
+      id: challengeId
+    },
+    data
+  });
 };
 
 const createChallengeHelp = (data, tx = prisma) => {
-    return tx.challengeHelp.create({
-        data
-    })
+  return tx.challengeHelp.create({
+    data
+  })
 }
 const getChallengeHelps = (challengeId, userId) => {
-    return prisma.challengeHelp.findMany({
-        where: {
-            attempt: {
-                challengeId,
-                userId
-            }
-        },
-        orderBy: {
-            createdAt: "asc"
-        }
-    });
+  return prisma.challengeHelp.findMany({
+    where: {
+      attempt: {
+        challengeId,
+        userId
+      }
+    },
+    orderBy: {
+      createdAt: "asc"
+    }
+  });
 };
+
+const getUserTotalHelpRequests = async (userId) => {
+  const count = await prisma.challengeHelp.count({
+    where: {
+      attempt: {
+        userId
+      },
+      type: {
+        in: ["HINT", "PSEUDOCODE", "SOLUTION"]
+      }
+    }
+  });
+
+  const attemptAgg = await prisma.challengeAttempt.aggregate({
+    where: { userId },
+    _sum: {
+      hintsUsed: true,
+      pseudocodeUsed: true,
+      solutionUsed: true
+    }
+  });
+
+  const countFromAttempts =
+    (attemptAgg._sum?.hintsUsed || 0) +
+    (attemptAgg._sum?.pseudocodeUsed || 0) +
+    (attemptAgg._sum?.solutionUsed || 0);
+
+  return Math.max(count, countFromAttempts);
+};
+
 module.exports = {
   getChallenges,
   getChallenge,
@@ -105,5 +135,6 @@ module.exports = {
   getCompletedChallengeCount,
   updateChallenge,
   createChallengeHelp,
-  getChallengeHelps
+  getChallengeHelps,
+  getUserTotalHelpRequests
 };

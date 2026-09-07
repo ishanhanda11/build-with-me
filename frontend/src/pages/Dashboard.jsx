@@ -5,20 +5,18 @@ import {
     Compass,
     Flame,
     FolderGit2,
-    Shield,
-    Users,
     Target,
     Search,
     ChevronDown,
     ArrowRight,
     LayoutDashboard,
-    Sparkles,
     LogOut,
     User
 } from "lucide-react";
 
 import { getProfile } from "../services/profile.api";
 import { getProjects } from "../services/project.api";
+import { getHelpRequestsCount } from "../services/requestHelp.api";
 import { logout } from "../services/auth.api";
 import "./DashBoard.css";
 
@@ -29,6 +27,7 @@ function Dashboard() {
 
     const [profile, setProfile] = useState(null);
     const [projects, setProjects] = useState([]);
+    const [helpRequestsCount, setHelpRequestsCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -53,6 +52,13 @@ function Dashboard() {
                     } else {
                         console.error("Error fetching projects:", projErr);
                     }
+                }
+
+                try {
+                    const helpCountRes = await getHelpRequestsCount();
+                    setHelpRequestsCount(helpCountRes?.count ?? 0);
+                } catch (helpErr) {
+                    console.error("Error fetching help requests count:", helpErr);
                 }
             } catch (err) {
                 console.error("Error loading dashboard profile:", err);
@@ -222,8 +228,8 @@ function Dashboard() {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/projects" className="nav-link">
-                                Discover
+                            <Link to="/about" className="nav-link">
+                                About
                             </Link>
                         </li>
                     </ul>
@@ -310,18 +316,6 @@ function Dashboard() {
                             <Target size={16} />
                             <span>Challenges</span>
                         </Link>
-                        <Link to="/projects" className="sidebar-link">
-                            <Sparkles size={16} />
-                            <span>Quests</span>
-                        </Link>
-                        <Link to="/profile" className="sidebar-link">
-                            <Shield size={16} />
-                            <span>Leaderboard</span>
-                        </Link>
-                        <Link to="/projects" className="sidebar-link">
-                            <Users size={16} />
-                            <span>Community</span>
-                        </Link>
                     </nav>
 
                     <div className="sidebar-quote-box">
@@ -401,7 +395,7 @@ function Dashboard() {
                                     <span className="journey-stat-name">Completed</span>
                                 </div>
                                 <div className="journey-stat-col">
-                                    <span className="journey-stat-value">5</span>
+                                    <span className="journey-stat-value">{helpRequestsCount}</span>
                                     <span className="journey-stat-name">Help Requests</span>
                                 </div>
                             </div>

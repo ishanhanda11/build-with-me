@@ -87,22 +87,23 @@ The system architecture includes:
 * **Expedition Dashboard (`Dashboard.jsx`)**:
   * Top navigation with live brand emblem, active routing indicators, and interactive user profile menu with hover grace period, profile navigation, and logout.
   * Hero greeting banner with personalized user name, mountain ridge landscape SVG, and discipline motto.
-  * 2×2 Bento Grid: *Your Journey* (real-time counts), *Current Streak* (fire emblem & 7-day activity pips), *Continue Building* (active project progress & direct navigation), and *Today's Quest* (daily objective & XP reward trigger).
-  * Sidebar with quick navigation, inspirational quote, and rune emblem.
+  * 2×2 Bento Grid: *Your Journey* (real-time live counts for projects, challenges, completions, and **real-time help requests**), *Current Streak* (fire emblem & 7-day activity pips), *Continue Building* (active project progress & direct navigation), and *Today's Quest* (daily objective & XP reward trigger).
+  * Streamlined sidebar navigation focused on active developer tools: **Overview**, **Projects**, and **Challenges**, with the inspirational quote pinned cleanly at the bottom.
+* **Platform About Page (`About.jsx`)**:
+  * Dedicated, immersive overview page accessible via top navigation (`/about`).
+  * Explains what Build With Me is, what it does, how it works through a 5-stage step-by-step loop, and technical feature deep dives.
 * **Learner Profile Dossier (`Profile.jsx`)**:
   * Warning alert banner displayed when profile is missing, explaining that parameters are required before project generation.
   * Left identity card: Capitalized initial avatar, experience level badge, XP progression track (`0 / 700 XP`), earned emblems (`First Step`, `Streak 7`, `Pioneer`, `Builder`), and motto.
   * Right learning dossier form: Goal textarea, target completion date with calendar picker integration (duplicate browser icons suppressed), available hours per day, experience level, difficulty, assistance preference, and learning style.
   * Seamless view vs. edit mode toggling with instant validation.
-* **Projects Explorer (`Projects.jsx`)**:
+* **Projects Explorer (`Projects.jsx`) & Roadmap (`Project.jsx`)**:
   * Category filter tabs (`All Projects`, `In Progress`, `Completed`) with real-time counts.
   * Live search input filtering projects dynamically by title or description.
-  * Responsive project cards with challenge progress ratios, animated progress bars, status tags, and direct route to `/projects/:id`.
-  * "New Territory" quick action card and empty state for creating new expeditions.
-* **Authentication Page (`Auth.jsx`)**:
-  * Dark stone card with radial atmospheric vignette, unified login and registration toggling, and input validation toasts.
+  * Direct challenge navigation: Clicking a challenge navigates straight to the active Monaco workspace (`/solve`), eliminating intermediate preview screens.
 * **Interactive Coding Workspace (`SolveChallenge.jsx`)**:
-  * Embedded Monaco Code Editor (`@monaco-editor/react`) with syntax highlighting, auto-formatting, and dark mode.
+  * Multi-language Monaco Code Editor (`@monaco-editor/react`) supporting **JavaScript**, **Python**, and **Java** with dynamic syntax and tokenization.
+  * Dedicated non-wrapping subbar architecture displaying challenge title, milestone badge, difficulty pill, and status, with learning objectives row directly underneath.
   * Progressive AI Help Drawer: Instant triggers for Non-spoiler Hints, Structural Pseudocode, and Solution Unlocks.
   * Live Interaction & Feedback Stream: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
 * **Route Guarding (`ProfileGuard.jsx`)**: Route-level session guarding redirecting unauthenticated or non-onboarded users.
@@ -112,7 +113,7 @@ The system architecture includes:
 * **Learner Profile Management**: Profile CRUD with learning style, target timeframe, experience preferences, and real user name resolution.
 * **AI Project Generation & Scope Control**: Dynamic curriculum generation using Google Gemini with dynamic `maxChallenges` bounds (8–20) tailored to learner capacity.
 * **Project & Challenge CRUD**: Full lifecycle management with strict sequential progression prerequisites.
-* **Attempt Tracking & Struggle Telemetry**: `ChallengeAttempt` tracking hints used, pseudocode requests, and solution unlocks.
+* **Real-Time Struggle & Help Telemetry**: `GET /api/help/count` aggregating `ChallengeHelp` records (`HINT`, `PSEUDOCODE`, `SOLUTION`) and `ChallengeAttempt` counters in real time.
 * **Audit & Interaction History**: `ChallengeHelp` model recording full chronological history of hints, pseudocode, solutions, user code submissions, and Gemini evaluations.
 * **Multi-Tier Progressive Help**: Tiered AI guidance endpoints (`/hint`, `/pseudocode`, `/solution`) to mentor rather than give direct answers.
 * **AI Code Evaluation Engine**: Submissions evaluated by Gemini with separate logic and syntax verification to prevent trivial hardcoded answers.
@@ -121,9 +122,8 @@ The system architecture includes:
 
 ## What is next
 
-* 🗺️ **Project Roadmap View (`Project.jsx`)**: Redesign challenge milestone roadmap to match the new dark stone & parchment visual aesthetic.
-* 💻 **Challenge Workspace Overhaul (`SolveChallenge.jsx`)**: Refine Monaco editor layout, split views, and hint drawer animations.
 * 🧪 **Automated Testing Suite**: Add integration and end-to-end test suites across frontend and backend flows.
+* 🛡️ **Rate Limiting & Token Budgeting**: Add IP and user-tier rate limiting for Gemini AI assistance and evaluation endpoints.
 * 📦 **Production Deployment**: Containerization with Docker and deployment setup on Vercel and Render.
 
 ## Documentation
