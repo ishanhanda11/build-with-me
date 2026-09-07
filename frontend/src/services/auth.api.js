@@ -11,8 +11,15 @@ const register = async (name, email, password) => {
 };
 
 const logout = async () => {
-    const response = await api.post("/auth/logout");
-    return response;
+    const refreshToken = localStorage.getItem("refreshToken");
+    try {
+        const response = await api.post("/auth/logout", { refreshToken });
+        return response;
+    } finally {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userName");
+    }
 };
 
 const getMe = async () => {

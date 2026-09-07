@@ -22,6 +22,12 @@ function Auth() {
         if (isLogin) {
             try {
                 const response = await login(email, password);
+                if (response.data?.accessToken) {
+                    localStorage.setItem("accessToken", response.data.accessToken);
+                }
+                if (response.data?.refreshToken) {
+                    localStorage.setItem("refreshToken", response.data.refreshToken);
+                }
                 if (response.data?.user?.name) {
                     localStorage.setItem("userName", response.data.user.name);
                 }
@@ -39,6 +45,12 @@ function Auth() {
         } else {
             try {
                 const response = await register(name, email, password);
+                if (response.data?.accessToken) {
+                    localStorage.setItem("accessToken", response.data.accessToken);
+                }
+                if (response.data?.refreshToken) {
+                    localStorage.setItem("refreshToken", response.data.refreshToken);
+                }
                 if (response.data?.user?.name) {
                     localStorage.setItem("userName", response.data.user.name);
                 }
