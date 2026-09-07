@@ -99,7 +99,9 @@ function Profile() {
                     setIsEditing(false);
                 }
             } catch (error) {
-                if (error.response?.status === 404) {
+                if (error.response?.status === 401) {
+                    navigate("/auth");
+                } else if (error.response?.status === 404) {
                     setProfileExists(false);
                     setIsEditing(true);
                 } else {

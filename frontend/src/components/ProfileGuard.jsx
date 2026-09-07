@@ -4,16 +4,23 @@ import { getProfile } from "../services/profile.api";
 
 function ProfileGuard({ children }) {
     const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [profileExists, setProfileExists] = useState(false);
 
     useEffect(() => {
         const checkProfile = async () => {
             try {
                 await getProfile();
+                setIsAuthenticated(true);
                 setProfileExists(true);
             } catch (error) {
-                if (error.response?.status === 404) {
+                if (error.response?.status === 401) {
+                    setIsAuthenticated(false);
+                } else if (error.response?.status === 404) {
+                    setIsAuthenticated(true);
                     setProfileExists(false);
+                } else {
+                    setIsAuthenticated(false);
                 }
             } finally {
                 setLoading(false);
@@ -37,6 +44,10 @@ function ProfileGuard({ children }) {
                 </div>
             </div>
         );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/auth" replace />;
     }
 
     if (!profileExists) {
