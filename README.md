@@ -78,10 +78,19 @@ This project is being built to:
 
 ## Current Status
 
-✅ **Backend AI Mentorship & Adaptive Learning Engine is fully functional!**
+✅ **Full-Stack Application & End-to-End AI Mentorship Platform is fully functional!**
 
-The backend architecture includes:
+The system architecture includes:
 
+### Frontend (React + Vite)
+* **Interactive Coding Workspace**: Embedded Monaco Code Editor (`@monaco-editor/react`) with syntax highlighting, auto-formatting, and dark mode.
+* **Progressive AI Help Drawer**: Instant triggers for Non-spoiler Hints, Structural Pseudocode, and Solution Unlocks.
+* **Live Interaction & Feedback Stream**: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
+* **Learner Onboarding Wizard**: Multi-step questionnaire tailoring learning style, goals, and difficulty preferences.
+* **Profile Guard & Auth Flow**: Route-level session guarding (`ProfileGuard`), redirecting unauthenticated or non-onboarded users.
+* **Project Dashboard & Roadmap**: Visual project explorer with challenge difficulty indicators and sequential progress tracking.
+
+### Backend (Node.js + Express + Prisma + Gemini)
 * **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation and revocation.
 * **Learner Profile Management**: Profile CRUD with learning style, target timeframe, and experience preferences.
 * **AI Project Generation & Scope Control**: Dynamic curriculum generation using Google Gemini with dynamic `maxChallenges` bounds (8–20) tailored to learner capacity.
@@ -95,9 +104,9 @@ The backend architecture includes:
 
 ## What is next
 
-* 🚀 **Frontend Development**: Build the interactive React interface (Code Editor workspace, progressive hint drawers, evaluation modal, and project dashboard).
-* 🧪 **Testing & Quality**: Add automated integration tests covering the attempt -> help -> submission -> adaptive challenge cycle.
-* 📦 **Deployment & CI/CD**: Containerization and cloud deployment setup on Vercel/Render.
+* 🎨 **UI Polish & Theme Enhancements**: Refine styling, transitions, and editor ergonomics.
+* 🧪 **Testing & Quality**: Add automated integration and end-to-end tests across frontend and backend flows.
+* 📦 **Deployment & CI/CD**: Containerization (Docker) and cloud deployment setup on Vercel and Render.
 
 ## Documentation
 

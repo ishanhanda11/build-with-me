@@ -1316,3 +1316,76 @@ The backend architecture is complete, transactional, and resilient. It supports 
 Current next step:
 **Develop the React frontend workspace: connect authentication cookies, build the project explorer, interactive code editor, sequential challenge roadmap, and real-time help/evaluation drawer.**
 
+---
+
+# Day 10 - Full-Stack React Frontend, Monaco Editor Workspace & End-to-End Integration
+
+## Where we were before
+
+In Day 9, the backend was completely finished with transactional consistency, challenge help history, bounded project scopes, and adaptive challenge generation. The next major milestone was building the user-facing web application in React and connecting it to the backend APIs.
+
+## What changed in this phase
+
+### 1. Backend CORS & Cookie Authentication Configuration
+- Installed and configured `cors` in `backend/src/app.js` with `origin: "http://localhost:5173"` and `credentials: true`.
+- Enabled cross-origin cookie propagation so the browser securely sends `httpOnly` access and refresh tokens across React API calls.
+
+### 2. Frontend Infrastructure & Architecture
+- Initialized React application powered by Vite, React Router v7 (`react-router-dom`), Axios, and React Hot Toast (`react-hot-toast`).
+- Created a modular API client layer (`services/api.js`, `services/auth.api.js`, `services/profile.api.js`, `services/project.api.js`, `services/requestHelp.api.js`) with configured baseURL and `withCredentials: true`.
+
+### 3. Authentication & Learner Profile Onboarding
+- **Authentication Page (`Auth.jsx`)**: Interactive tabbed interface for User Registration and Login with validation and toast notifications.
+- **Learner Profile Onboarding (`Profile.jsx`)**: Comprehensive onboarding questionnaire collecting learning goals, target timeframes, experience levels, help preferences, learning styles, and daily availability.
+- **Route Guarding (`ProfileGuard.jsx`)**: Created a higher-order route guard that verifies if the authenticated user has an active learner profile, redirecting new users to onboarding while showing a smooth loading transition.
+
+### 4. Project Explorer & Challenge Roadmap
+- **Dashboard & Project Listing (`Dashboard.jsx`, `Projects.jsx`)**: Displays learner projects, active statuses, creation dates, and triggers the AI project generation workflow.
+- **Project Detail (`Project.jsx`)**: Visualizes the sequential roadmap of challenges, displaying difficulty badges, completion badges, and challenge order.
+- **Challenge Overview (`Challenge.jsx`)**: Displays detailed challenge descriptions, learning objectives, and action buttons to enter the coding workspace.
+
+### 5. Interactive Coding Workspace & Progressive AI Drawer
+- **Monaco Code Editor (`SolveChallenge.jsx`)**: Embedded Monaco Editor (`@monaco-editor/react`) featuring syntax highlighting, dark mode (`vs-dark`), and real-time code buffer tracking.
+- **Progressive Help Drawer**: Instant triggers for:
+  - `Hint`: Non-spoiler algorithmic clues.
+  - `Pseudocode`: Step-by-step structural logic.
+  - `Solution`: Full code solution unlock.
+- **Live Help & Evaluation History**: Dynamically renders the `ChallengeHelp` audit stream, showing past hints, pseudocode, previous user code submissions, and Gemini evaluation results directly next to the editor.
+- **Live Evaluation Feedback**: Submissions trigger Gemini code evaluation, dynamically displaying feedback and success/failure indicators.
+
+## Architecture Overview
+
+```text
+React Client (Vite :5173)
+    │
+    ├── ProfileGuard (Session & Profile Check)
+    │
+    ├── /auth ──▶ POST /api/auth/register, /api/auth/login (Cookies stored)
+    ├── /profile ──▶ POST /api/profile (Learner Profile Setup)
+    ├── /projects ──▶ GET /api/project, POST /api/project (AI Project Gen)
+    ├── /projects/:id ──▶ GET /api/project/:id/challenges
+    │
+    └── /projects/:id/challenges/:id/solve
+            │
+            ├── Monaco Code Editor (User Solution Buffer)
+            ├── Progressive Help Drawer (POST /api/challenges/:id/hint, etc.)
+            ├── Live Interaction Feed (GET /api/challenges/:id/help)
+            └── Submission & Evaluation (POST /api/challenges/:id/submit)
+```
+
+## Lessons learned
+
+### Cookie Transport Across Frontend and Backend
+When running frontend and backend on different ports (`localhost:5173` and `localhost:3000`), `cors` must explicitly specify the exact origin and `credentials: true`. Wildcards (`*`) do not work with credentialed requests.
+
+### Client-Side State Synchronization with Interaction History
+Rather than storing hints in ephemeral local React state, fetching the `ChallengeHelp` history on component mount ensures learners retain all previously unlocked hints and past submissions upon refreshing the page or navigating back.
+
+## Current status updated
+
+The full-stack application is now complete and connected end-to-end. Learners can sign up, define their learning profile, generate AI-powered learning projects, navigate structured challenges, write solutions in Monaco Editor, access progressive AI hints, and receive instant AI feedback.
+
+Current next step:
+**Polish UI aesthetics, enhance Monaco editor ergonomics (keyboard shortcuts, reset buttons), add automated testing suites, and prepare for production cloud deployment.**
+
+
