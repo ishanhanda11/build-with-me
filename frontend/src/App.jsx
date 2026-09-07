@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import ProfileGuard from "./components/ProfileGuard";
 import Dashboard from "./pages/DashBoard";
 import About from "./pages/About";
+import Challenges from "./pages/Challenges";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/projects" element={<ProfileGuard><Projects /></ProfileGuard>} />
       <Route path="/projects/:projectId" element={<ProfileGuard><Project /></ProfileGuard>} />
+      <Route path="/challenges" element={<ProfileGuard><Challenges /></ProfileGuard>} />
       <Route
         path="/projects/:projectId/challenges/:challengeId/chat"
         element={<ProfileGuard><Chat /></ProfileGuard>}

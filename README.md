@@ -87,8 +87,14 @@ The system architecture includes:
 * **Expedition Dashboard (`Dashboard.jsx`)**:
   * Top navigation with live brand emblem, active routing indicators, and interactive user profile menu with hover grace period, profile navigation, and logout.
   * Hero greeting banner with personalized user name, mountain ridge landscape SVG, and discipline motto.
-  * 2×2 Bento Grid: *Your Journey* (real-time live counts for projects, challenges, completions, and **real-time help requests**), *Current Streak* (fire emblem & 7-day activity pips), *Continue Building* (active project progress & direct navigation), and *Today's Quest* (daily objective & XP reward trigger).
+  * Full-width vertically stacked layout: *Your Journey* on top (live metrics for projects, challenges, completions, and real-time help requests) and *Continue Building* below, stretching seamlessly from left to right.
+  * *Continue Building* strictly filters and displays active in-progress projects with dynamic progress bars and completion counts, hiding completed or abandoned builds.
   * Streamlined sidebar navigation focused on active developer tools: **Overview**, **Projects**, and **Challenges**, with the inspirational quote pinned cleanly at the bottom.
+* **Dedicated Challenges Hub (`Challenges.jsx`)**:
+  * Dedicated problem-solving arena accessible via `/challenges`.
+  * **Next Active Challenge Hero**: Prominently highlights the user's next unsolved milestone with difficulty indicator, parent project context, and a direct "Solve Challenge →" button jumping straight into the Monaco editor.
+  * **Multi-Dimensional Filtering**: Real-time filtering by status (*All*, *In Progress*, *Completed*), difficulty (*Easy*, *Medium*, *Hard*), parent project dropdown, and keyword search across titles and descriptions.
+  * Unified challenge stream with direct solver and solution review links.
 * **Platform About Page (`About.jsx`)**:
   * Dedicated, immersive overview page accessible via top navigation (`/about`).
   * Explains what Build With Me is, what it does, how it works through a 5-stage step-by-step loop, and technical feature deep dives.
@@ -98,7 +104,8 @@ The system architecture includes:
   * Right learning dossier form: Goal textarea, target completion date with calendar picker integration (duplicate browser icons suppressed), available hours per day, experience level, difficulty, assistance preference, and learning style.
   * Seamless view vs. edit mode toggling with instant validation.
 * **Projects Explorer (`Projects.jsx`) & Roadmap (`Project.jsx`)**:
-  * Category filter tabs (`All Projects`, `In Progress`, `Completed`) with real-time counts.
+  * Category filter tabs (`All Projects`, `In Progress`, `Completed`, `Abandoned`) with real-time counts.
+  * **Project Abandonment Workflow**: Safe in-card abandon button with a themed confirmation dialog to archive stalled projects without accidental navigation.
   * Live search input filtering projects dynamically by title or description.
   * Direct challenge navigation: Clicking a challenge navigates straight to the active Monaco workspace (`/solve`), eliminating intermediate preview screens.
 * **Interactive Coding Workspace (`SolveChallenge.jsx`)**:
@@ -106,7 +113,8 @@ The system architecture includes:
   * Dedicated non-wrapping subbar architecture displaying challenge title, milestone badge, difficulty pill, and status, with learning objectives row directly underneath.
   * Progressive AI Help Drawer: Instant triggers for Non-spoiler Hints, Structural Pseudocode, and Solution Unlocks.
   * Live Interaction & Feedback Stream: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
-* **Route Guarding (`ProfileGuard.jsx`)**: Route-level session guarding redirecting unauthenticated or non-onboarded users.
+* **Themed Loading States (`LoadingAnimation.jsx`, `loadingAnimation2.jsx`, `ProfileGuard.jsx`)**:
+  * Unified stone background token (`var(--bg-primary, #111312)`), bespoke typography, and warm parchment/crimson spinners across route transitions.
 
 ### Backend (Node.js + Express + Prisma + Gemini)
 * **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation, token revocation, and `GET /auth/me` user endpoint.

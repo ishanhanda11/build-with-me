@@ -37,4 +37,18 @@ const generateAdaptiveChallenges = async (projectId) => {
     return response.data;
 }
 
-export { createProject, getProjectById, getProjects, getChallenges, getChallenge, submitSolution, generateAdaptiveChallenges }
+const abandonProject = async (projectId) => {
+    const response = await api.patch(`/project/${projectId}/status`, { status: "ABANDONED" });
+    return response.data;
+};
+
+export {
+    createProject,
+    getProjectById,
+    getProjects,
+    getChallenges,
+    getChallenge,
+    submitSolution,
+    generateAdaptiveChallenges,
+    abandonProject
+};

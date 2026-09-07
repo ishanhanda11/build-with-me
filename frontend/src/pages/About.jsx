@@ -138,7 +138,7 @@ function About() {
               </Link>
             </li>
             <li>
-              <Link to="/projects" className="nav-link">
+              <Link to="/challenges" className="nav-link">
                 Challenges
               </Link>
             </li>

@@ -1574,7 +1574,112 @@ Displaying hardcoded metrics in dashboard bento cards undermines user trust. Exp
 The platform provides a cohesive, end-to-end hands-on engineering environment. The Monaco workspace supports multiple languages with direct roadmap navigation, live help requests update across the dashboard in real time, and the platform's core purpose and capabilities are documented in the new About section.
 
 Current next step:
-**Deploy application to staging/production environment, configure automated test pipelines, and implement rate limiting on AI mentorship endpoints.**
+**Overhaul loading animations with theme tokens, streamline dashboard cards layout to full width, add project abandonment workflows, and build a dedicated Challenges Hub.**
+
+---
+
+# Day 13 — Loading Animation Theming, Dashboard Layout Optimization, Project Abandonment Workflow, and Dedicated Challenges Hub
+
+## Where we were before
+
+In Day 12, we completed the Monaco Multi-Language Studio, direct challenge workspace routing, live struggle telemetry on the dashboard, and built the comprehensive About landing experience. However, several interaction and layout friction points remained:
+1. **Unstyled Loading State**: Loading indicators in `LoadingAnimation.jsx`, `loadingAnimation2.jsx`, and `ProfileGuard.jsx` used hardcoded dark grey backgrounds (`#0d1117`) and default fonts, disconnecting the user from the Nordic stone aesthetic during route transitions.
+2. **Dashboard Layout Crowding**: The dashboard's 2-column cards grid displayed cards side-by-side. When streak and daily quest cards were removed, the two remaining cards (`Your Journey` and `Continue Building`) were squeezed into awkward columns instead of spanning the full width from left to right.
+3. **Completed Projects in Continue Building**: The `Continue Building` card had a fallback that selected `projects[0]` even when all of its challenges were completed, displaying stale finished projects instead of strictly focusing on active in-progress builds.
+4. **No Project Abandonment Workflow**: Learners had no mechanism to mark projects as abandoned or archive stalled builds from their active roadmap.
+5. **Redundant Challenges Navigation**: Both "Projects" and "Challenges" in the navigation bar navigated to `/projects`, creating cognitive dissonance and confusing users who expected a dedicated challenges portal.
+
+## What changed in this phase
+
+### 1. Loading Animation UI Theming & Font Alignment
+- Themed `LoadingAnimation.jsx`, `loadingAnimation2.jsx`, and `ProfileGuard.jsx`:
+  - Replaced hardcoded `#0d1117` background with the unified stone theme surface token (`var(--bg-primary, #111312)`).
+  - Aligned typography with the design system font tokens (`var(--font-display)` for loading messages and `--font-sans`).
+  - Styled SVG loading spinners with the warm parchment (`#D8C7A5`) and restrained crimson (`#A43B2E`) palette.
+
+### 2. Dashboard Layout Optimization & In-Progress Filtering
+- **Vertical Hierarchy & Full Width**:
+  - Positioned **Your Journey** on top, followed directly by **Continue Building** underneath.
+  - Converted `.cards-grid` into a full-width flex column (`flex-direction: column; width: 100%`) and removed the `max-width: 1400px` boundary on `.dashboard-main`.
+  - Both cards now span seamlessly from left to right across all screen widths.
+- **Strict In-Progress Filtering**:
+  - Filtered out completed projects (`status === 'COMPLETED'` or all challenges finished) and abandoned projects.
+  - Rendered individual progress bars and metric counters for every active in-progress project.
+  - Added a graceful empty state when all projects are completed (*"All caught up! No projects currently in progress."*) with quick links to explore new projects.
+- **Navigation Bar Cleanup**:
+  - Removed the redundant search icon button from the dashboard top navigation bar to keep top-level actions streamlined and minimal.
+
+### 3. Project Abandonment Workflow in Projects Explorer
+- **API Integration**:
+  - Added and exported `abandonProject(projectId)` in `frontend/src/services/project.api.js`, connecting directly to the existing backend endpoint `PATCH /api/project/:id/status` with `{ status: "ABANDONED" }`.
+- **Card Action & Propagation Safety**:
+  - Added an **Abandon** button (`.project-abandon-card-btn`) on in-progress project cards in `Projects.jsx`.
+  - Applied `e.stopPropagation()` so clicking "Abandon" opens the confirmation modal without accidentally navigating into the project roadmap.
+- **Themed Confirmation Modal**:
+  - Built an atmospheric modal with backdrop blur (`.abandon-modal-overlay`), warning icon, project title highlight, and clear explanation of consequences.
+  - Provided **Keep Building** (cancel) and **Yes, Abandon Project** (destructive confirm) actions with loading state management.
+- **Filter Tabs & Statuses**:
+  - Added an **Abandoned ({count})** filter tab to `Projects.jsx`.
+  - Styled `.status-abandoned` badges in muted crimson across both project cards and the single project roadmap view (`Project.jsx`).
+
+### 4. Dedicated Challenges Hub Architecture (`/challenges`)
+- **New Page Component (`Challenges.jsx` & `Challenges.css`)**:
+  - Built a dedicated problem-solving hub providing a unified stream of all milestone coding challenges across the learner's active and archived projects.
+- **Featured Next Active Challenge Hero**:
+  - Automatically identifies the next pending challenge from active projects.
+  - Displays parent project context, difficulty badge (`EASY`, `MEDIUM`, `HARD`), learning objectives, and a prominent **"Solve Challenge →"** button that navigates directly into the Monaco editor (`/projects/:projectId/challenges/:challengeId/solve`).
+- **Real-Time Multi-Dimensional Filtering**:
+  - **Status Tabs**: *All*, *In Progress*, and *Completed*.
+  - **Difficulty Filter**: *All Levels*, *Easy*, *Medium*, and *Hard*.
+  - **Project Selector**: Dropdown to inspect challenges filtered by specific parent project.
+  - **Live Search**: Instant keyword search across challenge titles, descriptions, and parent project names.
+- **Challenge Cards Grid**:
+  - Cards display project badges, milestone number, difficulty tags, learning objectives, status indicators, and direct solver links.
+- **Application-Wide Navigation Update**:
+  - Registered `/challenges` in `App.jsx` guarded by `<ProfileGuard>`.
+  - Updated navbar and sidebar links in `DashBoard.jsx`, `Projects.jsx`, `Project.jsx`, and `About.jsx` from `/projects` to `/challenges`.
+
+## Architecture Overview
+
+```text
+React Client (Vite :5173)
+    │
+    ├── / (Protected) ──▶ Dashboard.jsx
+    │                       ├── Full-Width Stacked Cards (Your Journey on top, Continue Building below)
+    │                       └── Continue Building (Strictly In-Progress Projects Filter)
+    │
+    ├── /projects (Protected) ──▶ Projects.jsx
+    │                               ├── Abandon Project Action & Confirmation Dialog
+    │                               └── Abandoned Filter Tab & Crimson Status Badges
+    │
+    ├── /challenges (Protected) ──▶ Challenges.jsx
+    │                                 ├── Next Active Challenge Hero Banner (Direct /solve link)
+    │                                 ├── Multi-Dimensional Filtering (Status, Difficulty, Project, Search)
+    │                                 └── Unified Milestone Cards Grid
+    │
+    ├── /about (Protected) ──▶ About.jsx (Updated Nav)
+    │
+    └── /projects/:id/challenges/:id/solve ──▶ SolveChallenge.jsx (Monaco Workspace)
+```
+
+## Lessons learned
+
+### Safe Destructive Action Triggers Inside Navigable Cards
+When an entire card is a clickable navigation target (`onClick={() => navigate(...)}`), placing secondary or destructive action buttons inside it requires strict event management. Calling `e.stopPropagation()` on the button click handler prevents accidental routing, allowing confirmation modals to be safely mounted.
+
+### Flattening Relational Data for Specialized Views
+Rather than requiring separate database endpoints for specialized pages like the Challenges Hub, leveraging relational includes (`include: { challenges: true }` in `getProjects()`) and flattening them client-side (`projects.flatMap(...)`) minimizes backend round-trips, keeps API surfaces compact, and ensures immediate responsiveness when filtering.
+
+### Layout Resilience with Explicit Flex Column Directives
+Relying on multi-column CSS grids for dynamic cards can cause unwanted layout shifts when elements are conditionally hidden or removed. Transitioning `.cards-grid` to a vertical flex column with `width: 100%` ensures cards consistently span the full viewport length from left to right without empty gaps.
+
+## Current status updated
+
+The platform now features a dedicated Challenges Hub for direct milestone solving, full-width responsive dashboard cards focusing on active builds, an intuitive project abandonment flow, and themed loading transitions across all pages.
+
+Current next step:
+**Set up automated unit and integration tests for API services, configure Docker containerization, and prepare production deployment manifests.**
+
 
 
 

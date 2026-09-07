@@ -24,17 +24,19 @@ function ProfileGuard({ children }) {
     }, []);
 
     if (loading) {
-        return <div className="loading-container">
-            <img
-                src="/checkingProfile.gif"
-                alt="Loading"
-                className="loading-gif"
-            />
+        return (
+            <div className="loading-container" role="status" aria-live="polite">
+                <img
+                    src="/checkingProfile.gif"
+                    alt="Loading"
+                    className="loading-gif"
+                />
 
-            <div className="loading-text">
-                Checking profile<span className="dots">...</span>
+                <div className="loading-text">
+                    Checking profile<span className="dots">...</span>
+                </div>
             </div>
-        </div>;
+        );
     }
 
     if (!profileExists) {

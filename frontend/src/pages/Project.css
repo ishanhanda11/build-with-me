@@ -312,6 +312,12 @@
   color: #79B885;
 }
 
+.status-abandoned-pill {
+  background-color: rgba(198, 74, 56, 0.12);
+  border: 1px solid rgba(198, 74, 56, 0.35);
+  color: var(--accent-red-bright);
+}
+
 .project-progress-block {
   display: flex;
   flex-direction: column;

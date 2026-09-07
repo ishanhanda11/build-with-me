@@ -11,7 +11,8 @@ import {
   User,
   LogOut,
   Target,
-  Award
+  Award,
+  Ban
 } from "lucide-react";
 
 import {
@@ -125,16 +126,19 @@ function Project() {
     Math.round((completedCount / maxChallenges) * 100)
   );
 
+  const isAbandoned = project.status === "ABANDONED";
   const isProjectCompleted =
-    project.status === "COMPLETED" ||
-    (challenges.length >= maxChallenges &&
-      challenges.length > 0 &&
-      challenges.every((c) => c.status === "COMPLETED"));
+    !isAbandoned &&
+    (project.status === "COMPLETED" ||
+      (challenges.length >= maxChallenges &&
+        challenges.length > 0 &&
+        challenges.every((c) => c.status === "COMPLETED")));
 
   const allCurrentCompleted =
     challenges.length > 0 && challenges.every((c) => c.status === "COMPLETED");
 
   const canGenerateMore =
+    !isAbandoned &&
     allCurrentCompleted &&
     challenges.length < maxChallenges &&
     project.status !== "COMPLETED";
@@ -170,7 +174,7 @@ function Project() {
               </Link>
             </li>
             <li>
-              <Link to="/projects" className="nav-link">
+              <Link to="/challenges" className="nav-link">
                 Challenges
               </Link>
             </li>
@@ -249,10 +253,19 @@ function Project() {
 
             <span
               className={`project-status-pill ${
-                isProjectCompleted ? "status-done" : "status-active"
+                isAbandoned
+                  ? "status-abandoned-pill"
+                  : isProjectCompleted
+                  ? "status-done"
+                  : "status-active"
               }`}
             >
-              {isProjectCompleted ? (
+              {isAbandoned ? (
+                <>
+                  <Ban size={13} />
+                  <span>Abandoned</span>
+                </>
+              ) : isProjectCompleted ? (
                 <>
                   <CheckCircle2 size={13} />
                   <span>Completed</span>

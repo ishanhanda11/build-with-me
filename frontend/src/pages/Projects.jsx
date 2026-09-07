@@ -11,10 +11,13 @@ import {
   ChevronDown,
   User,
   LogOut,
-  ArrowRight
+  ArrowRight,
+  Ban,
+  AlertTriangle,
+  X
 } from "lucide-react";
 
-import { getProjects, createProject } from "../services/project.api";
+import { getProjects, createProject, abandonProject } from "../services/project.api";
 import { getProfile } from "../services/profile.api";
 import { logout } from "../services/auth.api";
 import LoadingAnimation from "../components/LoadingAnimation";
@@ -31,6 +34,8 @@ function Projects() {
   const [filter, setFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [projectToAbandon, setProjectToAbandon] = useState(null);
+  const [abandoning, setAbandoning] = useState(false);
 
   const userName = localStorage.getItem("userName") || "Developer";
 
@@ -105,19 +110,46 @@ function Projects() {
     return <LoadingAnimation />;
   }
 
-  const inProgressCount = projects.filter((p) => {
-    const isDone =
-      p.status === "COMPLETED" ||
-      (p.challenges?.length > 0 && p.challenges.every((c) => c.status === "COMPLETED"));
-    return !isDone;
-  }).length;
+  const handleOpenAbandonModal = (e, project) => {
+    e.stopPropagation();
+    setProjectToAbandon(project);
+  };
 
-  const completedCount = projects.filter((p) => {
-    return (
-      p.status === "COMPLETED" ||
-      (p.challenges?.length > 0 && p.challenges.every((c) => c.status === "COMPLETED"))
-    );
-  }).length;
+  const handleCloseAbandonModal = () => {
+    if (abandoning) return;
+    setProjectToAbandon(null);
+  };
+
+  const handleConfirmAbandon = async () => {
+    if (!projectToAbandon) return;
+    try {
+      setAbandoning(true);
+      await abandonProject(projectToAbandon.id);
+      toast.success(`Project "${projectToAbandon.title}" has been abandoned.`);
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectToAbandon.id ? { ...p, status: "ABANDONED" } : p
+        )
+      );
+      setProjectToAbandon(null);
+    } catch (error) {
+      console.error("Failed to abandon project:", error);
+      toast.error(error.response?.data?.message || "Failed to abandon project");
+    } finally {
+      setAbandoning(false);
+    }
+  };
+
+  const isProjectAbandoned = (p) => p.status === "ABANDONED";
+  const isProjectDone = (p) =>
+    !isProjectAbandoned(p) &&
+    (p.status === "COMPLETED" ||
+      (p.challenges?.length > 0 && p.challenges.every((c) => c.status === "COMPLETED")));
+  const isProjectInProgress = (p) => !isProjectDone(p) && !isProjectAbandoned(p);
+
+  const inProgressCount = projects.filter(isProjectInProgress).length;
+  const completedCount = projects.filter(isProjectDone).length;
+  const abandonedCount = projects.filter(isProjectAbandoned).length;
 
   const filteredProjects = projects.filter((project) => {
     const query = searchQuery.trim().toLowerCase();
@@ -126,14 +158,10 @@ function Projects() {
       project.title.toLowerCase().includes(query) ||
       (project.description && project.description.toLowerCase().includes(query));
 
-    const isDone =
-      project.status === "COMPLETED" ||
-      (project.challenges?.length > 0 &&
-        project.challenges.every((c) => c.status === "COMPLETED"));
-
     if (!matchesSearch) return false;
-    if (filter === "IN_PROGRESS") return !isDone;
-    if (filter === "COMPLETED") return isDone;
+    if (filter === "IN_PROGRESS") return isProjectInProgress(project);
+    if (filter === "COMPLETED") return isProjectDone(project);
+    if (filter === "ABANDONED") return isProjectAbandoned(project);
     return true;
   });
 
@@ -168,7 +196,7 @@ function Projects() {
               </Link>
             </li>
             <li>
-              <Link to="/projects" className="nav-link">
+              <Link to="/challenges" className="nav-link">
                 Challenges
               </Link>
             </li>
@@ -269,6 +297,13 @@ function Projects() {
             >
               Completed ({completedCount})
             </button>
+            <button
+              type="button"
+              className={`filter-tab ${filter === "ABANDONED" ? "active" : ""}`}
+              onClick={() => setFilter("ABANDONED")}
+            >
+              Abandoned ({abandonedCount})
+            </button>
           </div>
 
           <div className="search-input-wrapper">
@@ -330,15 +365,14 @@ function Projects() {
               const totalCount =
                 project.challenges?.length || project.maxChallenges || 1;
               const percent = Math.round((completedCount / totalCount) * 100);
-              const isCompleted =
-                project.status === "COMPLETED" ||
-                (project.challenges?.length > 0 &&
-                  project.challenges.every((c) => c.status === "COMPLETED"));
+              const isAbandoned = isProjectAbandoned(project);
+              const isCompleted = isProjectDone(project);
+              const isInProgress = isProjectInProgress(project);
 
               return (
                 <div
                   key={project.id}
-                  className="project-card"
+                  className={`project-card ${isAbandoned ? "card-abandoned" : ""}`}
                   onClick={() => navigate(`/projects/${project.id}`)}
                 >
                   <div className="project-card-top">
@@ -346,23 +380,46 @@ function Projects() {
                       <FolderGit2 size={18} />
                     </div>
 
-                    <span
-                      className={`project-status-tag ${
-                        isCompleted ? "status-completed" : "status-progress"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <>
-                          <CheckCircle2 size={12} />
-                          <span>Completed</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock size={12} />
-                          <span>In Progress</span>
-                        </>
+                    <div className="project-card-top-badges">
+                      <span
+                        className={`project-status-tag ${
+                          isAbandoned
+                            ? "status-abandoned"
+                            : isCompleted
+                            ? "status-completed"
+                            : "status-progress"
+                        }`}
+                      >
+                        {isAbandoned ? (
+                          <>
+                            <Ban size={12} />
+                            <span>Abandoned</span>
+                          </>
+                        ) : isCompleted ? (
+                          <>
+                            <CheckCircle2 size={12} />
+                            <span>Completed</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock size={12} />
+                            <span>In Progress</span>
+                          </>
+                        )}
+                      </span>
+
+                      {isInProgress && (
+                        <button
+                          type="button"
+                          className="project-abandon-card-btn"
+                          title="Abandon this project"
+                          onClick={(e) => handleOpenAbandonModal(e, project)}
+                        >
+                          <Ban size={12} />
+                          <span>Abandon</span>
+                        </button>
                       )}
-                    </span>
+                    </div>
                   </div>
 
                   <h3 className="project-card-title">{project.title}</h3>
@@ -380,19 +437,75 @@ function Projects() {
                     </div>
                     <div className="progress-bar-track">
                       <div
-                        className="progress-bar-fill"
+                        className={`progress-bar-fill ${isAbandoned ? "fill-abandoned" : ""}`}
                         style={{ width: `${percent}%` }}
                       />
                     </div>
                   </div>
 
                   <div className="project-card-footer">
-                    <span className="footer-action-text">View Challenges</span>
+                    <span className="footer-action-text">
+                      {isAbandoned ? "View Archived Challenges" : "View Challenges"}
+                    </span>
                     <ArrowRight size={15} className="footer-action-icon" />
                   </div>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {projectToAbandon && (
+          <div className="abandon-modal-overlay" onClick={handleCloseAbandonModal}>
+            <div className="abandon-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="abandon-modal-header">
+                <div className="abandon-modal-icon-box">
+                  <AlertTriangle size={20} className="abandon-alert-icon" />
+                </div>
+                <div className="abandon-modal-title-group">
+                  <h3 className="abandon-modal-title">Abandon Project</h3>
+                  <p className="abandon-modal-proj-name">{projectToAbandon.title}</p>
+                </div>
+                <button
+                  type="button"
+                  className="abandon-modal-close-btn"
+                  onClick={handleCloseAbandonModal}
+                  disabled={abandoning}
+                  aria-label="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="abandon-modal-body">
+                <p>
+                  Are you sure you want to abandon &ldquo;<strong>{projectToAbandon.title}</strong>&rdquo;?
+                </p>
+                <p className="abandon-modal-warning">
+                  This project will be moved out of your active expeditions. You will not be able to submit further solutions for its challenges.
+                </p>
+              </div>
+
+              <div className="abandon-modal-actions">
+                <button
+                  type="button"
+                  className="abandon-btn-cancel"
+                  onClick={handleCloseAbandonModal}
+                  disabled={abandoning}
+                >
+                  Keep Building
+                </button>
+                <button
+                  type="button"
+                  className="abandon-btn-confirm"
+                  onClick={handleConfirmAbandon}
+                  disabled={abandoning}
+                >
+                  <Ban size={14} />
+                  <span>{abandoning ? "Abandoning..." : "Yes, Abandon Project"}</span>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

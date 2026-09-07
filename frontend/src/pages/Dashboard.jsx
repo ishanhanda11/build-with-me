@@ -3,10 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
     Compass,
-    Flame,
     FolderGit2,
     Target,
-    Search,
     ChevronDown,
     ArrowRight,
     LayoutDashboard,
@@ -136,24 +134,16 @@ function Dashboard() {
         0
     );
 
-    const activeProject =
-        projects.find((proj) =>
-            proj.challenges?.some((c) => c.status !== "COMPLETED")
-        ) || projects[0];
+    const isProjectCompleted = (proj) =>
+        proj.status === "COMPLETED" ||
+        (proj.challenges?.length > 0 &&
+            proj.challenges.every((c) => c.status === "COMPLETED"));
 
-    const activeProjectTotal = activeProject?.challenges?.length || 0;
-    const activeProjectCompleted =
-        activeProject?.challenges?.filter((c) => c.status === "COMPLETED")
-            ?.length || 0;
-    const activeProjectProgressPercent =
-        activeProjectTotal > 0
-            ? Math.round((activeProjectCompleted / activeProjectTotal) * 100)
-            : 0;
+    const inProgressProjects = projects.filter(
+        (proj) => !isProjectCompleted(proj) && proj.status !== "ABANDONED"
+    );
 
     const userName = profile?.name || localStorage.getItem("userName") || "Developer";
-
-    const streakDays = 12;
-    const weeklyPips = [true, true, true, true, false, false, false];
 
     if (loading) {
         return (
@@ -223,7 +213,7 @@ function Dashboard() {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/projects" className="nav-link">
+                            <Link to="/challenges" className="nav-link">
                                 Challenges
                             </Link>
                         </li>
@@ -236,14 +226,6 @@ function Dashboard() {
                 </nav>
 
                 <div className="nav-actions">
-                    <button
-                        className="nav-search-btn"
-                        title="Search challenges or projects"
-                        aria-label="Search"
-                    >
-                        <Search size={18} />
-                    </button>
-
                     <div
                         className="user-profile-wrapper"
                         ref={dropdownRef}
@@ -312,7 +294,7 @@ function Dashboard() {
                             <FolderGit2 size={16} />
                             <span>Projects</span>
                         </Link>
-                        <Link to="/projects" className="sidebar-link">
+                        <Link to="/challenges" className="sidebar-link">
                             <Target size={16} />
                             <span>Challenges</span>
                         </Link>
@@ -404,146 +386,90 @@ function Dashboard() {
                         <div className="dash-card">
                             <div className="card-header-row">
                                 <span className="card-label">
-                                    <Flame size={13} className="card-label-icon" />
-                                    Current Streak
-                                </span>
-                            </div>
-
-                            <div className="streak-card-body">
-                                <div className="streak-left-block">
-                                    <div className="streak-number-row">
-                                        <Flame size={22} className="streak-flame-icon" />
-                                        <span className="streak-value">{streakDays} Days</span>
-                                    </div>
-
-                                    <div className="streak-pips">
-                                        {weeklyPips.map((isActive, idx) => (
-                                            <span
-                                                key={idx}
-                                                className={`streak-pip ${isActive ? "active" : ""}`}
-                                                title={`Day ${idx + 1}: ${isActive ? "Active" : "Upcoming"}`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <blockquote className="streak-quote">
-                                    &ldquo;Consistency builds what motivation can&rsquo;t.&rdquo;
-                                </blockquote>
-                            </div>
-                        </div>
-
-                        <div className="dash-card">
-                            <div className="card-header-row">
-                                <span className="card-label">
                                     <FolderGit2 size={13} className="card-label-icon" />
                                     Continue Building
                                 </span>
                             </div>
 
-                            {activeProject ? (
-                                <Link
-                                    to={`/projects/${activeProject.id}`}
-                                    className="project-summary-box"
-                                >
-                                    <div className="project-woodcut-thumb">
-                                        <svg
-                                            width="30"
-                                            height="30"
-                                            viewBox="0 0 32 32"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.4"
-                                        >
-                                            <path d="M16 28V14M16 14L8 8M16 14L24 8M16 20L10 16M16 20L22 16" />
-                                            <circle cx="16" cy="6" r="2" />
-                                            <line x1="6" y1="28" x2="26" y2="28" />
-                                        </svg>
-                                    </div>
+                            {inProgressProjects.length > 0 ? (
+                                <div className="in-progress-projects-list">
+                                    {inProgressProjects.map((proj) => {
+                                        const projTotal = proj.challenges?.length || 0;
+                                        const projCompleted =
+                                            proj.challenges?.filter((c) => c.status === "COMPLETED")
+                                                ?.length || 0;
+                                        const projProgressPercent =
+                                            projTotal > 0
+                                                ? Math.round((projCompleted / projTotal) * 100)
+                                                : 0;
 
-                                    <div className="project-info-block">
-                                        <h3 className="project-name">{activeProject.title}</h3>
-                                        <p className="project-description">
-                                            {activeProject.description ||
-                                                "Continue building and advancing your technical skills."}
-                                        </p>
+                                        return (
+                                            <Link
+                                                key={proj.id}
+                                                to={`/projects/${proj.id}`}
+                                                className="project-summary-box"
+                                            >
+                                                <div className="project-woodcut-thumb">
+                                                    <svg
+                                                        width="30"
+                                                        height="30"
+                                                        viewBox="0 0 32 32"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="1.4"
+                                                    >
+                                                        <path d="M16 28V14M16 14L8 8M16 14L24 8M16 20L10 16M16 20L22 16" />
+                                                        <circle cx="16" cy="6" r="2" />
+                                                        <line x1="6" y1="28" x2="26" y2="28" />
+                                                    </svg>
+                                                </div>
 
-                                        <div className="project-progress-row">
-                                            <div className="project-progress-track">
-                                                <div
-                                                    className="project-progress-fill"
-                                                    style={{ width: `${activeProjectProgressPercent}%` }}
-                                                />
-                                            </div>
-                                            <span className="project-progress-count">
-                                                {activeProjectCompleted} / {activeProjectTotal}
-                                            </span>
-                                        </div>
-                                    </div>
+                                                <div className="project-info-block">
+                                                    <h3 className="project-name">{proj.title}</h3>
+                                                    <p className="project-description">
+                                                        {proj.description ||
+                                                            "Continue building and advancing your technical skills."}
+                                                    </p>
 
-                                    <div className="project-arrow-btn">
-                                        <ArrowRight size={18} />
-                                    </div>
-                                </Link>
+                                                    <div className="project-progress-row">
+                                                        <div className="project-progress-track">
+                                                            <div
+                                                                className="project-progress-fill"
+                                                                style={{
+                                                                    width: `${projProgressPercent}%`
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <span className="project-progress-count">
+                                                            {projCompleted} / {projTotal}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="project-arrow-btn">
+                                                    <ArrowRight size={18} />
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
                             ) : (
                                 <div className="no-project-state">
                                     <p className="no-project-text">
-                                        Every journey begins with a first step.
+                                        {projects.length > 0
+                                            ? "All caught up! No projects currently in progress."
+                                            : "Every journey begins with a first step."}
                                     </p>
                                     <Link to="/projects" className="start-project-btn">
-                                        <span>+ Begin Your First Project</span>
+                                        <span>
+                                            {projects.length > 0
+                                                ? "+ Explore Projects"
+                                                : "+ Begin Your First Project"}
+                                        </span>
                                         <ArrowRight size={14} />
                                     </Link>
                                 </div>
                             )}
-                        </div>
-
-                        <div className="dash-card">
-                            <div className="card-header-row">
-                                <span className="card-label">
-                                    <Target size={13} className="card-label-icon" />
-                                    Today&rsquo;s Quest
-                                </span>
-                                <span className="card-label-icon">
-                                    <Compass size={14} />
-                                </span>
-                            </div>
-
-                            <div className="quest-body">
-                                <div className="quest-details">
-                                    <div className="quest-emblem">
-                                        <svg
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                        >
-                                            <circle cx="12" cy="12" r="9" />
-                                            <polygon points="12,5 14,12 12,19 10,12" fill="#B59A62" />
-                                            <polygon points="5,12 12,14 19,12 12,10" fill="#B59A62" />
-                                        </svg>
-                                    </div>
-
-                                    <div className="quest-title-reward">
-                                        <span className="quest-objective">Complete a challenge</span>
-                                        <span className="quest-xp-reward">+50 XP</span>
-                                    </div>
-                                </div>
-
-                                <Link
-                                    to={activeProject ? `/projects/${activeProject.id}` : "/projects"}
-                                    className="quest-action-link"
-                                >
-                                    <span>Begin</span>
-                                    <ArrowRight size={14} />
-                                </Link>
-                            </div>
-
-                            <p className="quest-footer-motto">
-                                &ldquo;It&rsquo;s a long road, but you&rsquo;re on it.&rdquo;
-                            </p>
                         </div>
                     </div>
                 </main>
