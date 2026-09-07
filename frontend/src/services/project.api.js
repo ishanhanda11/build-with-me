@@ -26,4 +26,10 @@ const submitSolution = async (challengeId, solution) => {
 
     return response.data;
 }
-export { createProject, getProjects, getChallenges, getChallenge, submitSolution }
+
+const generateAdaptiveChallenges = async (projectId) => {
+    const response = await api.post(`/challenges/${projectId}/adaptive`);
+    return response.data;
+}
+
+export { createProject, getProjects, getChallenges, getChallenge, submitSolution, generateAdaptiveChallenges }

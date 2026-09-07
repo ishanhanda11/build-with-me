@@ -1,15 +1,16 @@
 import { Editor } from "@monaco-editor/react";
 import { useEffect, useState } from "react";
 import { submitSolution } from "../services/project.api";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { requestHelp, getAllHelpHistory } from "../services/requestHelp.api";
 function SolveChallenge() {
     const [solution, setSolution] = useState(``);
-    const { challengeId } = useParams();
+    const { challengeId, projectId } = useParams();
     const [helpHistory, setHelpHistory] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [requestingHelp, setRequestingHelp] = useState(null);
+    const navigate = useNavigate()
     const handleSubmit = async () => {
         try {
             setSubmitting(true);
@@ -18,7 +19,15 @@ function SolveChallenge() {
             const historyResponse = await getAllHelpHistory(challengeId);
             setHelpHistory(historyResponse.result);
             if (evaluation.logicCorrectness) {
-                toast.success("Solution passed successfully");
+                if (response.response.newChallengesGenerated) {
+                    toast.success("New challenges generated!");
+
+                    setTimeout(() => {
+                        navigate(`/projects/${projectId}`);
+                    }, 1000);
+                } else {
+                    toast.success("Challenge completed successfully!");
+                }
             } else {
                 toast.error("Solution failed. Check the evaluation.");
             }
