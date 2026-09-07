@@ -694,24 +694,123 @@
 }
 
 @media (max-width: 768px) {
+  .project-topnav {
+    height: auto;
+    min-height: 56px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .project-topnav .brand-section {
+    order: 1;
+  }
+
+  .project-topnav .nav-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .project-topnav nav {
+    order: 3;
+    width: 100%;
+  }
+
+  .project-topnav .nav-links {
+    display: flex !important;
+    width: 100%;
+    justify-content: space-around;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .project-topnav .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-topnav .nav-link {
+    font-size: 12px;
+    padding: 4px 6px;
+    white-space: nowrap;
+  }
+
   .project-container {
     padding: 20px 16px 60px;
   }
 
   .project-hero-card {
-    padding: 24px 20px;
+    padding: 20px 16px;
   }
 
   .project-hero-header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-  .nav-links {
-    display: none;
+  .project-headline {
+    font-size: 26px;
+  }
+
+  .project-meta-badges {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .generate-more-banner {
     flex-direction: column;
     align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .generate-adaptive-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .project-container {
+    padding: 16px 12px 48px;
+  }
+
+  .project-headline {
+    font-size: 22px;
+  }
+
+  .challenge-card {
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 14px;
+  }
+
+  .challenge-index-badge {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 12px;
+  }
+
+  .challenge-title {
+    font-size: 15px;
+  }
+
+  .challenge-header-row {
+    gap: 8px;
+  }
+
+  .roadmap-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .project-completed-banner {
+    padding: 14px 16px;
   }
 }

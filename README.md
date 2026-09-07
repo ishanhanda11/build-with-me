@@ -115,6 +115,10 @@ The system architecture includes:
   * Live Interaction & Feedback Stream: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
 * **Themed Loading States (`LoadingAnimation.jsx`, `loadingAnimation2.jsx`, `ProfileGuard.jsx`)**:
   * Unified stone background token (`var(--bg-primary, #111312)`), bespoke typography, and warm parchment/crimson spinners across route transitions.
+* **Mobile-First Responsiveness & Cross-Device Navigation**:
+  * Complete media query system across all 8 pages for tablet (`768px`), mobile (`640px`), and small phone (`480px`) breakpoints.
+  * Ergonomic two-row mobile navigation bar preserving top-level routing (`Home | Projects | Challenges | About`) without hiding navigation links.
+  * Mobile-adapted layouts: 2x2 Journey stats cards, stacked Monaco coding workspace with vertical AI Mentorship drawer, horizontally scrollable filter tabs, single-column responsive grids, and 16px form inputs preventing iOS Safari auto-zoom.
 
 ### Backend (Node.js + Express + Prisma + Gemini)
 * **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation, token revocation, and `GET /auth/me` user endpoint.

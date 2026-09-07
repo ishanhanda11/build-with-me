@@ -10,8 +10,28 @@ const challengeHelpRoutes = require('./routes/challengeHelp.routes')
 const app = express()
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
+
+// Enable trust proxy for Render / reverse proxies so secure cookies are handled correctly
+app.set('trust proxy', 1)
+
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "http://localhost:3000"
+].filter(Boolean)
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true)
+        if (
+            allowedOrigins.includes(origin) ||
+            process.env.NODE_ENV !== 'production' ||
+            origin.endsWith('.vercel.app')
+        ) {
+            return callback(null, true)
+        }
+        return callback(new Error(`Origin ${origin} not allowed by CORS`))
+    },
     credentials: true
 }))
 app.use(express.json());
