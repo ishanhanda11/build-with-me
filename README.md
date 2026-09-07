@@ -78,21 +78,38 @@ This project is being built to:
 
 ## Current Status
 
-✅ **Full-Stack Application & End-to-End AI Mentorship Platform is fully functional!**
+✅ **Full-Stack Application & End-to-End AI Mentorship Platform is fully functional with a dedicated Dark Nordic & Frontier design system!**
 
 The system architecture includes:
 
-### Frontend (React + Vite)
-* **Interactive Coding Workspace**: Embedded Monaco Code Editor (`@monaco-editor/react`) with syntax highlighting, auto-formatting, and dark mode.
-* **Progressive AI Help Drawer**: Instant triggers for Non-spoiler Hints, Structural Pseudocode, and Solution Unlocks.
-* **Live Interaction & Feedback Stream**: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
-* **Learner Onboarding Wizard**: Multi-step questionnaire tailoring learning style, goals, and difficulty preferences.
-* **Profile Guard & Auth Flow**: Route-level session guarding (`ProfileGuard`), redirecting unauthenticated or non-onboarded users.
-* **Project Dashboard & Roadmap**: Visual project explorer with challenge difficulty indicators and sequential progress tracking.
+### Frontend (React + Vite + Vanilla CSS)
+* **Design Token System**: Custom dark stone palette (`#111312`), hairline borders (`#34352F`), restrained crimson accents (`#A43B2E`), muted gold (`#B59A62`), and bespoke typography (`Cinzel`, `Cormorant Garamond`, `Inter`, `JetBrains Mono`).
+* **Expedition Dashboard (`Dashboard.jsx`)**:
+  * Top navigation with live brand emblem, active routing indicators, and interactive user profile menu with hover grace period, profile navigation, and logout.
+  * Hero greeting banner with personalized user name, mountain ridge landscape SVG, and discipline motto.
+  * 2×2 Bento Grid: *Your Journey* (real-time counts), *Current Streak* (fire emblem & 7-day activity pips), *Continue Building* (active project progress & direct navigation), and *Today's Quest* (daily objective & XP reward trigger).
+  * Sidebar with quick navigation, inspirational quote, and rune emblem.
+* **Learner Profile Dossier (`Profile.jsx`)**:
+  * Warning alert banner displayed when profile is missing, explaining that parameters are required before project generation.
+  * Left identity card: Capitalized initial avatar, experience level badge, XP progression track (`0 / 700 XP`), earned emblems (`First Step`, `Streak 7`, `Pioneer`, `Builder`), and motto.
+  * Right learning dossier form: Goal textarea, target completion date with calendar picker integration (duplicate browser icons suppressed), available hours per day, experience level, difficulty, assistance preference, and learning style.
+  * Seamless view vs. edit mode toggling with instant validation.
+* **Projects Explorer (`Projects.jsx`)**:
+  * Category filter tabs (`All Projects`, `In Progress`, `Completed`) with real-time counts.
+  * Live search input filtering projects dynamically by title or description.
+  * Responsive project cards with challenge progress ratios, animated progress bars, status tags, and direct route to `/projects/:id`.
+  * "New Territory" quick action card and empty state for creating new expeditions.
+* **Authentication Page (`Auth.jsx`)**:
+  * Dark stone card with radial atmospheric vignette, unified login and registration toggling, and input validation toasts.
+* **Interactive Coding Workspace (`SolveChallenge.jsx`)**:
+  * Embedded Monaco Code Editor (`@monaco-editor/react`) with syntax highlighting, auto-formatting, and dark mode.
+  * Progressive AI Help Drawer: Instant triggers for Non-spoiler Hints, Structural Pseudocode, and Solution Unlocks.
+  * Live Interaction & Feedback Stream: Real-time rendering of all previous AI hints, submissions, and Gemini evaluation cards.
+* **Route Guarding (`ProfileGuard.jsx`)**: Route-level session guarding redirecting unauthenticated or non-onboarded users.
 
 ### Backend (Node.js + Express + Prisma + Gemini)
-* **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation and revocation.
-* **Learner Profile Management**: Profile CRUD with learning style, target timeframe, and experience preferences.
+* **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation, token revocation, and `GET /auth/me` user endpoint.
+* **Learner Profile Management**: Profile CRUD with learning style, target timeframe, experience preferences, and real user name resolution.
 * **AI Project Generation & Scope Control**: Dynamic curriculum generation using Google Gemini with dynamic `maxChallenges` bounds (8–20) tailored to learner capacity.
 * **Project & Challenge CRUD**: Full lifecycle management with strict sequential progression prerequisites.
 * **Attempt Tracking & Struggle Telemetry**: `ChallengeAttempt` tracking hints used, pseudocode requests, and solution unlocks.
@@ -104,9 +121,10 @@ The system architecture includes:
 
 ## What is next
 
-* 🎨 **UI Polish & Theme Enhancements**: Refine styling, transitions, and editor ergonomics.
-* 🧪 **Testing & Quality**: Add automated integration and end-to-end tests across frontend and backend flows.
-* 📦 **Deployment & CI/CD**: Containerization (Docker) and cloud deployment setup on Vercel and Render.
+* 🗺️ **Project Roadmap View (`Project.jsx`)**: Redesign challenge milestone roadmap to match the new dark stone & parchment visual aesthetic.
+* 💻 **Challenge Workspace Overhaul (`SolveChallenge.jsx`)**: Refine Monaco editor layout, split views, and hint drawer animations.
+* 🧪 **Automated Testing Suite**: Add integration and end-to-end test suites across frontend and backend flows.
+* 📦 **Production Deployment**: Containerization with Docker and deployment setup on Vercel and Render.
 
 ## Documentation
 

@@ -5,7 +5,10 @@ const createLearnerProfile = (profileData) =>{
 }
 
 const getLearnerProfileByUserId = (userId) =>{
-    return prisma.learnerProfile.findUnique({where:{userId}})
+    return prisma.learnerProfile.findUnique({
+        where: { userId },
+        include: { user: { select: { id: true, name: true, email: true } } }
+    })
 }
 
 const updateUserProfile = (id,updatedProfileData) =>{

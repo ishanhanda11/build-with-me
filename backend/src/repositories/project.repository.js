@@ -13,7 +13,11 @@ const createChallenge = (challengeData, tx = prisma) => {
 };
 
 const getAllProject = (userId) => {
-  return prisma.project.findMany({ where: { userId } })
+  return prisma.project.findMany({
+    where: { userId },
+    include: { challenges: true },
+    orderBy: { createdAt: 'desc' }
+  })
 }
 
 const getProjectById = (id, userId) => {

@@ -4,6 +4,11 @@ const createProject = async (profile) => {
     const response = await api.post('/project', profile)
     return response.data;
 }
+const getProjectById = async (projectId) => {
+    const response = await api.get(`/project/${projectId}`);
+    return response.data;
+};
+
 const getProjects = async () => {
     const response = await api.get("/project")
     return response.data;
@@ -32,4 +37,4 @@ const generateAdaptiveChallenges = async (projectId) => {
     return response.data;
 }
 
-export { createProject, getProjects, getChallenges, getChallenge, submitSolution, generateAdaptiveChallenges }
+export { createProject, getProjectById, getProjects, getChallenges, getChallenge, submitSolution, generateAdaptiveChallenges }

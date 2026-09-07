@@ -114,8 +114,6 @@ function SolveChallenge() {
                 </div>
                 {helpHistory.map((help) => (
                     <div className="help-content" key={help.id}>
-
-                        {/* HINT */}
                         {help.type === "HINT" && (
                             <div>
                                 <h3>Hint</h3>
@@ -123,7 +121,6 @@ function SolveChallenge() {
                             </div>
                         )}
 
-                        {/* PSEUDOCODE */}
                         {help.type === "PSEUDOCODE" && (
                             <div>
                                 <h3>Pseudocode</h3>
@@ -136,7 +133,6 @@ function SolveChallenge() {
                             </div>
                         )}
 
-                        {/* SOLUTION */}
                         {help.type === "SOLUTION" && (
                             <div>
                                 <h3>AI Solution</h3>
@@ -151,7 +147,6 @@ function SolveChallenge() {
                             </div>
                         )}
 
-                        {/* USER SOLUTION */}
                         {help.type === "USER_SOLUTION" && (
                             <div>
                                 <h3>Your Submission</h3>
@@ -162,7 +157,6 @@ function SolveChallenge() {
                             </div>
                         )}
 
-                        {/* EVALUATION */}
                         {help.type === "EVALUATION" && (
                             <div>
                                 <h3>AI Evaluation</h3>

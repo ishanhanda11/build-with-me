@@ -1386,6 +1386,100 @@ Rather than storing hints in ephemeral local React state, fetching the `Challeng
 The full-stack application is now complete and connected end-to-end. Learners can sign up, define their learning profile, generate AI-powered learning projects, navigate structured challenges, write solutions in Monaco Editor, access progressive AI hints, and receive instant AI feedback.
 
 Current next step:
-**Polish UI aesthetics, enhance Monaco editor ergonomics (keyboard shortcuts, reset buttons), add automated testing suites, and prepare for production cloud deployment.**
+**Overhaul frontend visual aesthetics, implement cohesive dark stone theme system, build out dashboard bento cards, profile dossier, projects explorer, and polish user interaction flows.**
+
+---
+
+# Day 11 — Design System Overhaul, Gamified Developer Journey, and Clean Frontend Architecture
+
+## Where we were before
+
+In Day 10, we established the full-stack connectivity: user authentication, onboarding questionnaire, project explorer, Monaco Editor coding workspace, and progressive AI help drawer. While functional, the user interface lacked a cohesive aesthetic identity, the profile page did not enforce completion prior to project generation, and backend user relations defaulted to generic placeholders when unjoined.
+
+## What changed in this phase
+
+### 1. Design System & Thematic Architecture
+- Established a unified design token system in `frontend/src/index.css`:
+  - **Surfaces**: Dark Nordic stone (`--bg-primary: #111312`, `--bg-surface: #181A18`, `--bg-card: #141614`).
+  - **Borders**: Hairline structural borders (`--border-default: #34352F`, `--border-subtle: #242622`).
+  - **Accents**: Restrained crimson (`--accent-red: #A43B2E`, `--accent-red-bright: #C64A38`) and muted gold (`--accent-gold: #B59A62`).
+  - **Typography**: Imported and configured `Cinzel`, `Cormorant Garamond`, `Inter`, and `JetBrains Mono` for a balanced editorial and developer aesthetic.
+
+### 2. Dashboard Experience & Interactive Navigation
+- Rebuilt `Dashboard.jsx` and `DashBoard.css`:
+  - **Header & Navigation**: Top navigation with brand identity, active routing indicators, search button, and user profile chip.
+  - **Profile Dropdown**: Implemented interactive dropdown with hover grace period (`closeTimeoutRef` 200ms debounce), click toggle, and outside click listener to prevent flickering. Provides direct access to "My Profile" and authenticated "Log Out".
+  - **Hero Greeting**: Personalized greeting banner (`Good to see you, {userName}`) accompanied by an atmospheric landscape SVG silhouette and motto (`DISCIPLINE CREATES FREEDOM`).
+  - **2×2 Bento Grid**:
+    - *Your Journey*: Real-time project, challenge, and completion metrics derived from live backend data.
+    - *Current Streak*: Fire emblem, 7-day activity progression pips, and consistency quote.
+    - *Continue Building*: Active project card featuring woodcut emblem, description, progress bar, and direct navigation.
+    - *Today's Quest*: Daily challenge card offering structured learning objectives and +50 XP reward trigger.
+  - **Sidebar**: Quick navigation links paired with an inspirational quote and rune emblem.
+
+### 3. Learner Profile Dossier & Mandatory Onboarding
+- Rebuilt `Profile.jsx` and `Profile.css`:
+  - **Profile Requirement Warning Banner**: Prominent warning displayed when a learner has not created a profile, stating that goals and learning preferences are required before generating projects.
+  - **Identity & Progression Dossier (Left Column)**: User initial avatar, experience tier badge, XP progression track (`0 / 700 XP`), earned achievement emblems (`First Step`, `Streak 7`, `Pioneer`, `Builder`), and personal motto.
+  - **Learning Preferences Form (Right Column)**: Goal textarea, target completion date with calendar picker integration (native duplicate calendar icon suppressed via CSS), available hours per day, experience level, difficulty preference, assistance preference, and learning style.
+  - **View vs. Edit Mode**: Toggling between read-only dossier and active editing with instant validation and update persistence.
+
+### 4. Projects Explorer & Build Journey Map
+- Rebuilt `Projects.jsx` and `Projects.css`:
+  - **Filter Navigation**: Quick category tabs for `All Projects`, `In Progress`, and `Completed` with real-time count badges.
+  - **Live Search**: Client-side search input filtering projects dynamically by title or description.
+  - **Project Cards Grid**: Responsive grid displaying project status tags, title, description, challenge completion ratio (`completed / total`), progress bar, and direct navigation to `/projects/:id`.
+  - **Quick Action & Empty State**: "New Territory" dashed action card and empty state with compass icon for generating new projects.
+
+### 5. Backend User Resolution & Authentication Endpoint
+- Added `GET /auth/me` endpoint in `backend/src/routes/auth.routes.js` to return authenticated user details (`name`, `email`, `role`).
+- Updated `backend/src/services/profile.service.js` to query the Prisma `User` table when learner profiles are retrieved, ensuring real user names are returned rather than fallback placeholders.
+
+### 6. Clean Code Craftsmanship & Anti-Robotic Refactoring
+- Systematically audited and cleaned all frontend files:
+  - Removed robotic section divider comments (`// -----------------------`, `/* ======================= */`).
+  - Stripped artificial interview boilerplate comments and step annotations.
+  - Ensured code is natural, self-documenting, and human-written across all pages and stylesheets.
+
+## Architecture Overview
+
+```text
+React Client (Vite :5173)
+    │
+    ├── /auth ──▶ Auth.jsx (Unified Dark Stone Card, Login / Register Toggle)
+    │
+    ├── / (Protected) ──▶ Dashboard.jsx
+    │                       ├── TopNav & Profile Dropdown (Logout, Profile link)
+    │                       ├── Hero Greeting & Mountain Landscape
+    │                       └── 2x2 Bento Grid (Journey, Streak, Active Project, Quest)
+    │
+    ├── /profile (Protected) ──▶ Profile.jsx
+    │                              ├── Unonboarded Warning Banner
+    │                              ├── Identity & Progression Dossier (XP Bar, Badges)
+    │                              └── Learning Dossier Form (Calendar Picker, Preferences)
+    │
+    └── /projects (Protected) ──▶ Projects.jsx
+                                   ├── Category Filter Tabs (All, In Progress, Completed)
+                                   ├── Real-Time Search Filter
+                                   └── Project Cards Grid with Challenge Progress Bars
+```
+
+## Lessons learned
+
+### Grace Periods for Hover Dropdowns
+Hover menus often close prematurely when the cursor crosses narrow padding gaps between the trigger button and the dropdown container. Adding an invisible `::before` pseudo-element bridge and a small debounce timeout (150–200ms) on `onMouseLeave` prevents flickering while keeping the interface responsive.
+
+### Browser Calendar Indicator Normalization
+HTML5 `<input type="date">` inputs render native calendar picker indicators that conflict with custom SVG action buttons. Using `input[type="date"]::-webkit-calendar-picker-indicator { display: none !important; }` allows seamless custom button triggers while using `input.showPicker()` for the native date selection modal.
+
+### Code Readability Over Comment Noise
+Over-commenting with divider banners and obvious explanations makes code look machine-generated and harder to scan. Writing expressive variable names, modular functions, and idiomatic React hooks makes code inherently self-documenting and clean.
+
+## Current status updated
+
+The platform features a complete, highly polished frontend with a unified dark stone and frontier parchment aesthetic. Authentication, Dashboard, Profile Dossier, and Projects Explorer are fully functional, resilient, and connected to the backend.
+
+Current next step:
+**Redesign the single Project Roadmap page (`Project.jsx`) and Monaco Challenge Workspace (`SolveChallenge.jsx`) to align with the new design system.**
 
 

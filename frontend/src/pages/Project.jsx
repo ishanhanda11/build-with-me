@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getChallenges, generateAdaptiveChallenges } from "../services/project.api";
+import { getChallenges, getProjectById, generateAdaptiveChallenges } from "../services/project.api";
 import LoadingAnimation from "../components/LoadingAnimation";
 import toast from "react-hot-toast";
 
@@ -8,20 +8,28 @@ function Project() {
     const navigate = useNavigate();
     const { projectId } = useParams();
     const [challenges, setChallenges] = useState([]);
+    const [project, setProject] = useState(null);
+
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
         const fetchChallenges = async () => {
             try {
-                const response = await getChallenges(projectId);
-                setChallenges(response.challenges);
+                const [challengesRes, projectRes] = await Promise.all([
+                    getChallenges(projectId),
+                    getProjectById(projectId)
+                ]);
+                console.log(challengesRes)
+                setChallenges(challengesRes.challenges);
+                setProject(projectRes.project);
             } catch (error) {
                 console.log(error);
             } finally {
                 setLoading(false);
             }
         };
+
 
         fetchChallenges();
     }, [projectId]);
@@ -48,11 +56,29 @@ function Project() {
         return <LoadingAnimation />;
     }
 
-    const allCompleted = challenges.length > 0 && challenges.every(c => c.status === "COMPLETED");
+    const isProjectCompleted = project?.status === "COMPLETED";
+    const allChallengesCompleted = challenges.length > 0 && challenges.every(c => c.status === "COMPLETED");
+    const canGenerateMore =
+        allChallengesCompleted &&
+        challenges.length < project?.maxChallenges;
+
 
     return (
         <div>
-            <h1>Challenges</h1>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h1>
+                    Challenges ({challenges.filter(c => c.status === "COMPLETED").length} / {project?.maxChallenges})
+                </h1>
+
+                {canGenerateMore && (
+                    <button
+                        disabled={generating}
+                        onClick={handleGenerateNext}
+                    >
+                        {generating ? "Generating Next Challenges..." : "Generate Next Challenges"}
+                    </button>
+                )}
+            </div>
 
             {challenges.map((challenge) => (
                 <div key={challenge.id} onClick={() => navigate(`/project/${projectId}/challenges/${challenge.id}`)} style={{ cursor: "pointer" }}>
@@ -62,14 +88,9 @@ function Project() {
                 </div>
             ))}
 
-            {allCompleted && (
+            {isProjectCompleted && (
                 <div style={{ marginTop: "20px" }}>
-                    <button
-                        disabled={generating}
-                        onClick={handleGenerateNext}
-                    >
-                        {generating ? "Generating Next Challenges..." : "Generate Next Challenges"}
-                    </button>
+                    <h2>🎉 Congratulations! Project Completed!</h2>
                 </div>
             )}
         </div>
