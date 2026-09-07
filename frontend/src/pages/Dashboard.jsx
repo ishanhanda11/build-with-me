@@ -16,7 +16,7 @@ import { getProfile } from "../services/profile.api";
 import { getProjects } from "../services/project.api";
 import { getHelpRequestsCount } from "../services/requestHelp.api";
 import { logout } from "../services/auth.api";
-import "./DashBoard.css";
+import "./Dashboard.css";
 
 function Dashboard() {
     const navigate = useNavigate();

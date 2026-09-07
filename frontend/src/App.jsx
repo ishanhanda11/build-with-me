@@ -7,7 +7,7 @@ import Chat from "./pages/Chat";
 import SolveChallenge from "./pages/SolveChallenge";
 import Profile from "./pages/Profile";
 import ProfileGuard from "./components/ProfileGuard";
-import Dashboard from "./pages/DashBoard";
+import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import Challenges from "./pages/Challenges";
 
