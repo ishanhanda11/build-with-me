@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ArrowRight } from "lucide-react";
 
-import { login, register } from "../services/auth.api";
+import { login, register, getMe } from "../services/auth.api";
 import "./Auth.css";
 
 function Auth() {
@@ -12,8 +12,32 @@ function Auth() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [checkingAuth, setCheckingAuth] = useState(true);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const verifyAuth = async () => {
+            try {
+                await getMe();
+                if (isMounted) {
+                    navigate("/", { replace: true });
+                }
+            } catch {
+                if (isMounted) {
+                    setCheckingAuth(false);
+                }
+            }
+        };
+
+        verifyAuth();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -74,6 +98,32 @@ function Auth() {
         setEmail("");
         setPassword("");
     };
+
+    if (checkingAuth) {
+        return (
+            <div className="auth-page">
+                <div className="auth-card" style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "260px" }}>
+                    <div className="auth-brand-header" style={{ marginBottom: "16px" }}>
+                        <svg
+                            className="auth-emblem"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                        >
+                            <polygon points="12,2 22,20 2,20" />
+                            <polygon points="12,7 18,18 6,18" stroke="#A43B2E" />
+                            <line x1="12" y1="2" x2="12" y2="20" />
+                        </svg>
+                        <span className="auth-brand-name">BUILD WITH ME</span>
+                    </div>
+                    <div className="loading-text" style={{ fontSize: "14px", marginTop: "8px" }}>
+                        Verifying session<span className="dots">...</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="auth-page">
