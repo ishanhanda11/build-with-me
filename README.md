@@ -121,7 +121,9 @@ The system architecture includes:
   * Mobile-adapted layouts: 2x2 Journey stats cards, stacked Monaco coding workspace with vertical AI Mentorship drawer, horizontally scrollable filter tabs, single-column responsive grids, and 16px form inputs preventing iOS Safari auto-zoom.
 
 ### Backend (Node.js + Express + Prisma + Gemini)
-* **Authentication & Session Security**: Secure cookie-based JWT sessions with refresh token rotation, token revocation, and `GET /auth/me` user endpoint.
+* **Clean 4-Tier Architecture**: Modular separation of concerns across Route, Controller, Service, and Repository layers (including dedicated `/auth/me` user retrieval decoupled from route-level Prisma execution).
+* **Authentication & Rate Limiting Defense**: Secure cookie-based JWT sessions with refresh token rotation, token revocation, and `express-rate-limit` guards on `/register` (anti-bot mass creation), `/login` (brute-force defense with `skipSuccessfulRequests: true`), and `/refresh` (replay attack mitigation).
+* **Hardened Request Validation**: Zod schema validation with trimmed inputs and custom, user-friendly error messages across registration and authentication endpoints.
 * **Learner Profile Management**: Profile CRUD with learning style, target timeframe, experience preferences, and real user name resolution.
 * **AI Project Generation & Scope Control**: Dynamic curriculum generation using Google Gemini with dynamic `maxChallenges` bounds (8–20) tailored to learner capacity.
 * **Project & Challenge CRUD**: Full lifecycle management with strict sequential progression prerequisites.
@@ -135,7 +137,7 @@ The system architecture includes:
 ## What is next
 
 * 🧪 **Automated Testing Suite**: Add integration and end-to-end test suites across frontend and backend flows.
-* 🛡️ **Rate Limiting & Token Budgeting**: Add IP and user-tier rate limiting for Gemini AI assistance and evaluation endpoints.
+* 🛡️ **AI Token Budgeting & LLM Rate Limiting**: Add IP and user-tier rate limiting for Gemini AI assistance and evaluation endpoints.
 * 📦 **Production Deployment**: Containerization with Docker and deployment setup on Vercel and Render.
 
 ## Documentation

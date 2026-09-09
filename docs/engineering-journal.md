@@ -1749,3 +1749,61 @@ The platform is fully mobile-responsive across all primary and secondary routes,
 
 Current next step:
 **Set up automated unit and integration tests for API services, configure Docker containerization, and prepare production deployment manifests.**
+
+---
+
+# Day 15 — Auth Architecture Refactoring, API Rate Limiting & Validation Hardening
+
+## Summary
+
+Completed critical backend infrastructure improvements focusing on architectural separation of concerns, defensive API rate limiting against brute-force attacks, hardened Zod request schema validation with informative error messages, and frontend error toast resilience.
+
+## What was built
+
+### 1. 4-Tier Clean Architecture Separation for `/auth/me`
+- **Problem**: The `GET /auth/me` endpoint was previously implemented directly inside the Express router file (`auth.routes.js`) using inline Prisma database queries. This violated the project's layered architectural pattern (Route → Controller → Service → Repository), mixing HTTP routing with data access logic and making unit testing difficult.
+- **Solution**: Refactored the `/me` route through all four architectural tiers:
+  - **Route ([auth.routes.js](file:///backend/src/routes/auth.routes.js))**: Exclusively maps `GET /me`, guards with `authenticate` middleware, and delegates to `getUserController`. Removed leftover `prisma` imports.
+  - **Controller ([auth.controller.js](file:///backend/src/controllers/auth.controller.js))**: `getUserController` receives the request, extracts `req.user.userId`, awaits `getUserService(userId)`, returns standard JSON `{ message, user }`, and passes exceptions to `next(err)`.
+  - **Service ([auth.service.js](file:///backend/src/services/auth.service.js))**: `getUserService` contains pure business logic completely decoupled from Express (`req`/`res`), invokes `getUser(userId)` from repository, and raises an application-level `404` error if the user is missing.
+  - **Repository ([auth.repository.js](file:///backend/src/repositories/auth.repository.js))**: `getUser` encapsulates the database layer, issuing `prisma.user.findUnique` with explicit projection (`select: { id: true, name: true, email: true }`) to ensure password hashes and internal credentials never leave the database boundary.
+
+### 2. Defensive Rate Limiting (`backend/src/rateLimiting/auth.rateLimiting.js`)
+- Installed `express-rate-limit` and engineered route-specific rate limiting policies:
+  - **Login Limiter (`loginRateLimit`)**: 10 attempts per 15-minute window with `skipSuccessfulRequests: true`. Legitimate authenticated logins do not decrement the counter, while repeated failed password attempts trigger an HTTP `429 Too Many Requests` response to defeat brute-force and credential-stuffing attacks.
+  - **Register Limiter (`registerRateLimit`)**: 12 requests per 15-minute window without skipping, preventing automated bot scripts from spamming account creation.
+  - **Refresh Limiter (`refreshRateLimit`)**: 20 requests per 15-minute window with `skipSuccessfulRequests: true`. Protects against refresh token replay and forgery attacks while allowing active client sessions to seamlessly rotate tokens.
+  - Configured `standardHeaders: true` (RFC-compliant `RateLimit-*` headers) and `legacyHeaders: false`. Verified compatibility with Express `trust proxy` configuration for accurate client IP resolution behind proxies like Render and Vercel.
+
+### 3. Zod Request Validation Hardening (`backend/src/validators/auth.validation.js`)
+- **Problem**: Default Zod validation errors without custom messages returned generic strings like `"Required"`, `"Invalid email"`, or `"String must contain at least 8 character(s)"`.
+- **Solution**: Enhanced schemas with explicit, human-friendly messages:
+  - `name`: Required error `"Name is required"`, `.trim()` sanitization, `.min(3, "Name must be at least 3 characters long")`, and `.max(50, "Name cannot exceed 50 characters")`.
+  - `email`: Required error `"Email is required"`, `.trim()` sanitization, and `.email("Please enter a valid email address")`.
+  - `password`: Required error `"Password is required"` and `.min(8, "Password must be at least 8 characters long")`.
+  - Maintained schema composition via `loginValidation = registerValidation.omit({ name: true })`, ensuring login instantly inherits email and password error messages without code duplication.
+
+### 4. Frontend Toast Error Feedback Alignment (`frontend/src/pages/Auth.jsx`)
+- **Problem**: When login failed due to invalid credentials, the backend error handler formatted the response as `{ error: "Invalid email or password", message: "something went wrong" }`. In `Auth.jsx`, `toast.error(error.response?.data?.message || error.response?.data?.error)` evaluated the hardcoded `"something went wrong"` first, concealing the real error reason from the learner.
+- **Solution**: Reordered error extraction to check `error.response?.data?.error` first before falling back to `message`, allowing specific service-level and rate-limiter error messages to directly display in the UI.
+
+### 5. Repository Cleanup
+- Removed an erroneous `getUser` reference in `profile.repository.js` export list that previously caused a `ReferenceError`, ensuring server boot stability.
+
+## Lessons learned
+
+### Express Global Error Handlers Must Not Hardcode Message Attributes
+A common backend trap is returning a generic static string like `{ message: "something went wrong", error: err.message }`. Since modern frontend clients commonly check `res.data.message` first for user feedback, hardcoded message strings mask granular domain errors (such as 401 Unauthorized or 409 Conflict). Frontend toast handlers should prioritize domain error fields or backends should map `message: err.message`.
+
+### Smart Rate Limiting with `skipSuccessfulRequests`
+Applying blanket rate limiting on login routes can inadvertently penalize legitimate users who frequently access an app. Using `skipSuccessfulRequests: true` distinguishes between legitimate usage and adversarial brute-force attacks by only counting failed requests (HTTP status >= 400).
+
+### Schema Inheritance Keeps Validation DRY
+Using Zod's `.omit({ name: true })` on `registerValidation` allows `loginValidation` to automatically stay synchronized whenever email or password requirements change, preventing divergent validation logic between signup and login.
+
+## Current status updated
+
+The platform has hardened authentication security, layered architectural separation for user identity retrieval, and defensive rate limiting across entry endpoints.
+
+Current next step:
+**Set up automated unit and integration tests for API services, configure Docker containerization, and prepare production deployment manifests.**
