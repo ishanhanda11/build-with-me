@@ -59,9 +59,9 @@ function Auth() {
                 navigate("/");
             } catch (error) {
                 toast.error(
-                    error.response?.data?.message ||
                     error.response?.data?.error ||
-                    "Something went wrong"
+                    error.response?.data?.message
+
                 );
             } finally {
                 setSubmitting(false);

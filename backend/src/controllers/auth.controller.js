@@ -1,4 +1,4 @@
-const {registerUser, loginUser, newSession, logoutUser} = require('../services/auth.service')
+const { registerUser, loginUser, newSession, logoutUser, getUserService } = require('../services/auth.service')
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
 
@@ -9,8 +9,8 @@ const getCookieOptions = (maxAge) => ({
     ...(maxAge ? { maxAge } : {})
 })
 
-const registerController = async (req,res,next) =>{
-    try{
+const registerController = async (req, res, next) => {
+    try {
         const user = await registerUser(req.body)
         res.cookie('accessToken', user.accessToken, getCookieOptions(15 * 60 * 1000))
         res.cookie('refreshToken', user.refreshToken, getCookieOptions(3 * 24 * 60 * 60 * 1000))
@@ -20,13 +20,13 @@ const registerController = async (req,res,next) =>{
             accessToken: user.accessToken,
             refreshToken: user.refreshToken,
         })
-    }catch(err){
+    } catch (err) {
         next(err)
     }
 }
 
-const loginController = async(req,res,next)=>{
-    try{
+const loginController = async (req, res, next) => {
+    try {
         const user = await loginUser(req.body)
         res.cookie('accessToken', user.accessToken, getCookieOptions(15 * 60 * 1000))
         res.cookie('refreshToken', user.refreshToken, getCookieOptions(3 * 24 * 60 * 60 * 1000))
@@ -36,13 +36,13 @@ const loginController = async(req,res,next)=>{
             accessToken: user.accessToken,
             refreshToken: user.refreshToken,
         })
-    }catch(err){
+    } catch (err) {
         next(err)
     }
 }
 
-const refreshTokenController = async (req,res,next) =>{
-    try{
+const refreshTokenController = async (req, res, next) => {
+    try {
         const token = req.cookies?.refreshToken || req.body?.refreshToken
         if (!token) {
             return res.status(401).json({ message: "Refresh token is missing" })
@@ -55,7 +55,7 @@ const refreshTokenController = async (req,res,next) =>{
             accessToken: session.accessToken,
             refreshToken: session.refreshToken,
         })
-    }catch(err){
+    } catch (err) {
         if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError") {
             return res.status(401).json({ message: "Invalid or expired refresh token" })
         }
@@ -63,18 +63,31 @@ const refreshTokenController = async (req,res,next) =>{
     }
 }
 
-const logoutController = async(req,res,next)=>{
-    try{
+const logoutController = async (req, res, next) => {
+    try {
         const token = req.cookies?.refreshToken || req.body?.refreshToken
-        if(token){
+        if (token) {
             await logoutUser(token)
         }
         res.clearCookie("accessToken", getCookieOptions())
         res.clearCookie("refreshToken", getCookieOptions())
-        return res.status(200).json({message: "user logged out successfully"})
-    }catch(err){
+        return res.status(200).json({ message: "user logged out successfully" })
+    } catch (err) {
         next(err)
     }
 }
 
-module.exports = {registerController, loginController, refreshTokenController, logoutController}
+const getUserController = async (req, res, next) => {
+    try {
+        const userId = req.user.userId
+        const user = await getUserService(userId)
+        return res.status(200).json({
+            message: "user fetched successfully",
+            user: user
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+module.exports = { registerController, loginController, refreshTokenController, logoutController, getUserController }
