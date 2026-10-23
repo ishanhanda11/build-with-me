@@ -20,7 +20,7 @@ const generateProject = async (profile, previousProjects = []) => {
     : "No previous projects exist.";
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.6-flash",
+    model: "gemini-3.8-flash",
 
     contents: `
 Generate a personalized, practical learning project based on the following learner profile.
@@ -133,7 +133,7 @@ Return exactly 2 challenges and no more.
             type: "integer",
             minimum: 8,
             maximum: 20
-        },
+          },
           challenges: {
             type: "array",
             minItems: 2,
@@ -167,7 +167,7 @@ Return exactly 2 challenges and no more.
             }
           }
         },
-        required: ["title", "description","maxChallenges","challenges"]
+        required: ["title", "description", "maxChallenges", "challenges"]
       }
     }
   });
