@@ -20,7 +20,7 @@ const generateProject = async (profile, previousProjects = []) => {
     : "No previous projects exist.";
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-3.5-flash-lite",
 
     contents: `
 Generate a personalized, practical learning project based on the following learner profile.
